@@ -11,6 +11,7 @@ let inquiries = [
     propertyId: '1',
     message: 'Interested in scheduling a site visit. Please contact me at your earliest convenience.',
     status: 'new',
+    priority: 'medium',
     source: 'website',
     budget: '₹2-3 Cr',
     createdAt: '2024-01-20T10:30:00Z',
@@ -25,6 +26,7 @@ let inquiries = [
     propertyId: '2',
     message: 'Looking for 3BHK apartment with good amenities. When can I visit the site?',
     status: 'contacted',
+    priority: 'high',
     source: 'website',
     budget: '₹1-1.5 Cr',
     createdAt: '2024-01-19T14:15:00Z',
@@ -39,6 +41,7 @@ let inquiries = [
     propertyId: '3',
     message: 'Need commercial space for my IT company. Please share more details about available units.',
     status: 'qualified',
+    priority: 'high',
     source: 'phone',
     budget: '₹5-8 Cr',
     createdAt: '2024-01-18T09:45:00Z',
@@ -52,6 +55,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const propertyId = searchParams.get('propertyId');
     const search = searchParams.get('search');
+    const limit = searchParams.get('limit');
 
     let filteredInquiries = [...inquiries];
 
@@ -78,11 +82,12 @@ export async function GET(request: NextRequest) {
     // Sort by creation date (newest first)
     filteredInquiries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    return NextResponse.json({
-      success: true,
-      data: filteredInquiries,
-      total: filteredInquiries.length
-    });
+    // Apply limit if specified
+    if (limit) {
+      filteredInquiries = filteredInquiries.slice(0, parseInt(limit));
+    }
+
+    return NextResponse.json(filteredInquiries);
   } catch (error) {
     console.error('Error fetching inquiries:', error);
     return NextResponse.json(
@@ -112,9 +117,7 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Invalid email format' },
         { status: 400 }
       );
-    }
-
-    const newInquiry = {
+    }    const newInquiry = {
       id: (inquiries.length + 1).toString(),
       name,
       email,
@@ -123,6 +126,7 @@ export async function POST(request: NextRequest) {
       propertyId: body.propertyId || null,
       message,
       status: 'new',
+      priority: body.priority || 'medium',
       source: body.source || 'website',
       budget: body.budget || '',
       createdAt: new Date().toISOString(),

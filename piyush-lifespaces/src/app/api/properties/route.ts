@@ -58,9 +58,25 @@ let properties = [
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
     const type = searchParams.get('type');
     const status = searchParams.get('status');
     const search = searchParams.get('search');
+
+    // If ID is provided, return single property
+    if (id) {
+      const property = properties.find(p => p.id === id);
+      if (!property) {
+        return NextResponse.json(
+          { success: false, error: 'Property not found' },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json({
+        success: true,
+        data: [property] // Return as array for consistency
+      });
+    }
 
     let filteredProperties = [...properties];
 
