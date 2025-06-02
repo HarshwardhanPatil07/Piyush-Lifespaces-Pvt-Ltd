@@ -9,10 +9,12 @@ import {
   FileText, 
   BarChart, 
   Settings,
-  LogOut
+  LogOut,
+  Mail
 } from 'lucide-react';
 import PropertyManagement from '@/components/PropertyManagement';
 import InquiryManagement from '@/components/InquiryManagement';
+import ContactManagementSimple from '@/components/ContactManagement-simple';
 
 interface DashboardStats {
   totalProperties: number;
@@ -273,11 +275,11 @@ export default function AdminDashboard() {
         <div className="flex space-x-8">
           {/* Sidebar */}
           <div className="w-64 bg-white rounded-lg shadow-md p-6">
-            <nav className="space-y-2">
-              {[
+            <nav className="space-y-2">              {[
                 { id: 'dashboard', label: 'Dashboard', icon: BarChart },
                 { id: 'properties', label: 'Properties', icon: Building },
                 { id: 'inquiries', label: 'Inquiries', icon: MessageSquare },
+                { id: 'contacts', label: 'Contacts', icon: Mail },
                 { id: 'content', label: 'Content', icon: FileText },
                 { id: 'settings', label: 'Settings', icon: Settings },
               ].map((item) => {
@@ -298,13 +300,10 @@ export default function AdminDashboard() {
                 );
               })}
             </nav>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1">
+          </div>          {/* Main Content */}          <div className="flex-1">
             {activeTab === 'dashboard' && renderDashboard()}
             {activeTab === 'properties' && <PropertyManagement />}
-            {activeTab === 'inquiries' && <InquiryManagement />}
+            {activeTab === 'inquiries' && <InquiryManagement />}            {activeTab === 'contacts' && <ContactManagementSimple />}
             {activeTab === 'content' && (
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Content Management</h2>

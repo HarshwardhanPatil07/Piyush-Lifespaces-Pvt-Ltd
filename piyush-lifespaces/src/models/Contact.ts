@@ -8,7 +8,7 @@ export interface IContact extends Document {
   message: string;
   propertyInterest?: string;
   source: string;
-  status: 'new' | 'responded' | 'resolved';
+  status: 'new' | 'contacted' | 'resolved';
   isRead: boolean;
   response?: string;
   respondedAt?: Date;
@@ -35,10 +35,9 @@ const ContactSchema = new Schema<IContact>({
   subject: { type: String, required: true, trim: true },
   message: { type: String, required: true },
   propertyInterest: { type: String },
-  source: { type: String, required: true, default: 'contact-form' },
-  status: { 
+  source: { type: String, required: true, default: 'contact-form' },  status: { 
     type: String, 
-    enum: ['new', 'responded', 'resolved'],
+    enum: ['new', 'contacted', 'resolved'],
     default: 'new'
   },
   isRead: { type: Boolean, default: false },

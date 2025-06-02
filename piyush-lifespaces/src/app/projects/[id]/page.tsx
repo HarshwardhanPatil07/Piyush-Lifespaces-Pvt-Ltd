@@ -65,13 +65,12 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
   useEffect(() => {
     fetchProperty();
   }, [resolvedParams.id]);
-
   const fetchProperty = async () => {
     try {
       const response = await fetch(`/api/properties?id=${resolvedParams.id}`);
       const data = await response.json();
-      if (data.success && data.data.length > 0) {
-        setProperty(data.data[0]);
+      if (data.success && data.data) {
+        setProperty(data.data);
       }
     } catch (error) {
       console.error('Error fetching property:', error);

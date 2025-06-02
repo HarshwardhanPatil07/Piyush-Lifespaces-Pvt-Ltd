@@ -258,7 +258,8 @@ export default function PropertyManagement() {
   return (
     <div className="space-y-6">      {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-extrabold text-gray-900">Property Management</h1>        <button
+        <h1 className="text-3xl font-extrabold text-gray-900">Property Management</h1>
+        <button
           onClick={handleAdd}
           className="bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors font-semibold shadow-lg"
         >
@@ -271,7 +272,8 @@ export default function PropertyManagement() {
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />            <input
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <input
               type="text"
               placeholder="Search properties..."
               value={searchTerm}
@@ -341,12 +343,12 @@ export default function PropertyManagement() {
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
                     Actions
                   </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">                {properties.map((property) => (
+                </tr>              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {properties.map((property) => (
                   <tr key={property._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">                        <div className="flex-shrink-0 h-12 w-12">
+                    <td className="px-6 py-4">                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-12 w-12">
                           <img
                             className="h-12 w-12 rounded-lg object-cover border"
                             src={property.images && property.images[0] ? property.images[0] : 'https://via.placeholder.com/100x100?text=No+Image'}
@@ -397,9 +399,9 @@ export default function PropertyManagement() {
                           {property.area}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">                        <button 
+                    </td>                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
                           onClick={() => window.open(`/projects/${property._id}`, '_blank')}
                           className="text-blue-600 hover:text-blue-900"
                           title="View"
@@ -412,7 +414,8 @@ export default function PropertyManagement() {
                           title="Edit"
                         >
                           <Edit size={16} />
-                        </button>                        <button 
+                        </button>
+                        <button 
                           onClick={() => handleDelete(property._id)}
                           className="text-red-600 hover:text-red-900"
                           title="Delete"
