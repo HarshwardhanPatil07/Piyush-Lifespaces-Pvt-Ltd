@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -22,7 +22,7 @@ import {
 import Link from 'next/link';
 
 interface Property {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   location: string;
@@ -35,17 +35,22 @@ interface Property {
   amenities: string[];
   images: string[];
   features: string[];
+  possession?: string;
+  developer?: string;
+  rera?: string;
+  isFeatured?: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 interface PropertyDetailProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function PropertyDetail({ params }: PropertyDetailProps) {
+  const resolvedParams = use(params);
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -59,11 +64,11 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
 
   useEffect(() => {
     fetchProperty();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   const fetchProperty = async () => {
     try {
-      const response = await fetch(`/api/properties?id=${params.id}`);
+      const response = await fetch(`/api/properties?id=${resolvedParams.id}`);
       const data = await response.json();
       if (data.success && data.data.length > 0) {
         setProperty(data.data[0]);
@@ -82,11 +87,10 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+        },        body: JSON.stringify({
           ...inquiryForm,
           property: property?.title,
-          propertyId: property?.id,
+          propertyId: property?._id,
           source: 'property-page'
         }),
       });

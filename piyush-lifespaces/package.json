@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "npx tsx scripts/seed.ts"
+    "seed": "npx tsx scripts/seed.ts",
+    "seed-properties": "npx tsx scripts/seed-properties.ts",
+    "seed-full": "npx tsx scripts/seed-full.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",

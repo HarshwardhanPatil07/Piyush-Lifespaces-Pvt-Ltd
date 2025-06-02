@@ -108,15 +108,15 @@ export default function AdminDashboard() {
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500"
         >
-          <div className="flex items-center justify-between">            <div>
-              <p className="text-sm font-medium text-gray-600">Total Properties</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalProperties || 0}</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-gray-700">Total Properties</p>
+              <p className="text-3xl font-black text-gray-900">{stats.totalProperties || 0}</p>
             </div>
             <Building className="h-12 w-12 text-blue-500" />
           </div>
@@ -128,9 +128,10 @@ export default function AdminDashboard() {
           transition={{ delay: 0.1 }}
           className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500"
         >
-          <div className="flex items-center justify-between">            <div>
-              <p className="text-sm font-medium text-gray-600">Active Inquiries</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.activeInquiries || 0}</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-gray-700">Active Inquiries</p>
+              <p className="text-3xl font-black text-gray-900">{stats.activeInquiries || 0}</p>
             </div>
             <MessageSquare className="h-12 w-12 text-green-500" />
           </div>
@@ -142,9 +143,10 @@ export default function AdminDashboard() {
           transition={{ delay: 0.2 }}
           className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500"
         >
-          <div className="flex items-center justify-between">            <div>
-              <p className="text-sm font-medium text-gray-600">Monthly Views</p>
-              <p className="text-3xl font-bold text-gray-900">{(stats.monthlyViews || 0).toLocaleString()}</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-gray-700">Monthly Views</p>
+              <p className="text-3xl font-black text-gray-900">{(stats.monthlyViews || 0).toLocaleString()}</p>
             </div>
             <BarChart className="h-12 w-12 text-purple-500" />
           </div>
@@ -156,9 +158,10 @@ export default function AdminDashboard() {
           transition={{ delay: 0.3 }}
           className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500"
         >
-          <div className="flex items-center justify-between">            <div>
-              <p className="text-sm font-medium text-gray-600">Completed Sales</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.completedSales || 0}</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-gray-700">Completed Sales</p>
+              <p className="text-3xl font-black text-gray-900">{stats.completedSales || 0}</p>
             </div>
             <Users className="h-12 w-12 text-orange-500" />
           </div>
@@ -170,26 +173,25 @@ export default function AdminDashboard() {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-lg shadow-md p-6"
+          transition={{ delay: 0.4 }}          className="bg-white rounded-lg shadow-md p-6"
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Properties</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Properties</h3>
           <div className="space-y-3">
             {recentProperties.length > 0 ? (
               recentProperties.slice(0, 3).map((property) => (
                 <div key={property._id || property.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <p className="font-medium text-gray-900">{property.title}</p>
-                    <p className="text-sm text-gray-600">{property.location}</p>
-                    <p className="text-sm font-semibold text-blue-600">{property.price}</p>
+                    <p className="font-bold text-gray-900">{property.title}</p>
+                    <p className="text-sm font-medium text-gray-700">{property.location}</p>
+                    <p className="text-sm font-bold text-blue-600">{property.price}</p>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(property.status)}`}>
+                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${getStatusColor(property.status)}`}>
                     {property.status}
                   </span>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-4">No properties found</p>
+              <p className="text-gray-500 text-center py-4 font-medium">No properties found</p>
             )}
           </div>
         </motion.div>

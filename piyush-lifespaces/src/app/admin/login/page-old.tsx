@@ -22,15 +22,13 @@ export default function AdminLogin() {
     }));
     setError(''); // Clear error when user types
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      console.log('Sending login request with:', formData);
-      const response = await fetch('/api/auth/login', {
+      console.log('Sending login request with:', formData);      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,8 +38,7 @@ export default function AdminLogin() {
       });
 
       const data = await response.json();
-      console.log('Login response:', data);
-      if (data.success) {
+      console.log('Login response:', data);      if (data.success) {
         console.log('Login successful, redirecting to /admin');
         // Small delay to ensure cookie is properly set before redirect
         setTimeout(() => {
@@ -71,8 +68,7 @@ export default function AdminLogin() {
             <div className="bg-blue-600 p-3 rounded-full">
               <Building className="h-8 w-8 text-white" />
             </div>
-          </div>
-          <h2 className="text-4xl font-extrabold text-gray-900">Admin Login</h2>
+          </div>          <h2 className="text-4xl font-extrabold text-gray-900">Admin Login</h2>
           <p className="mt-2 text-base font-medium text-gray-700">
             Access the Piyush Lifespaces admin dashboard
           </p>
@@ -82,16 +78,14 @@ export default function AdminLogin() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white p-8 rounded-lg shadow-lg"
+          className="bg-white p-8 rounded-lg shadow-md"
         >
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg font-medium">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 {error}
               </div>
-            )}
-
-            <div>
+            )}            <div>
               <label htmlFor="email" className="block text-sm font-bold text-gray-800 mb-2">
                 Email Address
               </label>
@@ -108,10 +102,7 @@ export default function AdminLogin() {
                   value={formData.email}
                   onChange={handleChange}
                   className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 focus:z-10 font-medium"
-                  placeholder="admin@piyushlifespaces.com"
-                />
-              </div>
-            </div>
+                  placeholder="Enter your email"            </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-bold text-gray-800 mb-2">
@@ -129,7 +120,7 @@ export default function AdminLogin() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 focus:z-10 font-medium"
+                  className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                   placeholder="Enter your password"
                 />
                 <button
@@ -138,9 +129,9 @@ export default function AdminLogin() {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeOff className="h-5 w-5 text-gray-400" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <Eye className="h-5 w-5 text-gray-400" />
                   )}
                 </button>
               </div>
@@ -154,13 +145,13 @@ export default function AdminLogin() {
                   type="checkbox"
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm font-medium text-gray-900">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
                   Remember me
                 </label>
               </div>
 
               <div className="text-sm">
-                <a href="#" className="font-bold text-blue-600 hover:text-blue-500">
+                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
                   Forgot password?
                 </a>
               </div>
@@ -169,7 +160,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-bold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-colors duration-200"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                 <Shield className="h-5 w-5 text-blue-500 group-hover:text-blue-400" />
@@ -179,7 +170,7 @@ export default function AdminLogin() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-xs font-medium text-gray-600">
+            <p className="text-xs text-gray-500">
               This is a secure admin area. Unauthorized access is prohibited.
             </p>
           </div>
@@ -191,9 +182,9 @@ export default function AdminLogin() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="text-center"
         >
-          <p className="text-sm font-medium text-gray-700">
+          <p className="text-sm text-gray-600">
             Need help? Contact{' '}
-            <a href="mailto:support@piyushlifespaces.com" className="text-blue-600 hover:text-blue-500 font-semibold">
+            <a href="mailto:support@piyushlifespaces.com" className="text-blue-600 hover:text-blue-500">
               technical support
             </a>
           </p>

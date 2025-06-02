@@ -17,7 +17,9 @@ import {
   Bath,
   Square,
   Calendar,
-  DollarSign
+  DollarSign,
+  Image as ImageIcon,
+  Camera
 } from 'lucide-react';
 
 interface Property {
@@ -61,9 +63,10 @@ export default function PropertyManagement() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
-  const [formData, setFormData] = useState<Partial<Property>>(defaultProperty);
-  const [amenityInput, setAmenityInput] = useState('');
+  const [formData, setFormData] = useState<Partial<Property>>(defaultProperty);  const [amenityInput, setAmenityInput] = useState('');
   const [featureInput, setFeatureInput] = useState('');
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string[]>([]);
 
   useEffect(() => {
     fetchProperties();
@@ -86,11 +89,17 @@ export default function PropertyManagement() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleEdit = (property: Property) => {
+  };  const handleEdit = (property: Property) => {
     setEditingProperty(property);
     setFormData(property);
+    setImagePreview(property.images || []);
+    setIsModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setEditingProperty(null);
+    setFormData(defaultProperty);
+    setImagePreview([]);
     setIsModalOpen(true);
   };
 
@@ -109,7 +118,6 @@ export default function PropertyManagement() {
       }
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -117,18 +125,27 @@ export default function PropertyManagement() {
       const method = editingProperty ? 'PUT' : 'POST';
       const url = '/api/properties';
       
+      const submitData = {
+        ...formData,
+        images: imagePreview, // Use imagePreview which is synced with uploads
+        id: editingProperty?.id
+      };
+      
+      console.log('Submitting property data:', submitData);
+      console.log('Images being submitted:', imagePreview);
+      
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          id: editingProperty?.id
-        }),
+        credentials: 'include',
+        body: JSON.stringify(submitData),
       });
 
       const data = await response.json();
+      console.log('Response from server:', data);
+      
       if (data.success) {
         if (editingProperty) {
           setProperties(properties.map(p => 
@@ -138,18 +155,22 @@ export default function PropertyManagement() {
           setProperties([...properties, data.data]);
         }
         closeModal();
+      } else {
+        alert(data.error || 'Failed to save property');
       }
     } catch (error) {
       console.error('Error saving property:', error);
+      alert('Failed to save property');
     }
   };
-
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingProperty(null);
     setFormData(defaultProperty);
     setAmenityInput('');
     setFeatureInput('');
+    setImagePreview([]);
+    setUploadingImages(false);
   };
 
   const addAmenity = () => {
@@ -178,11 +199,53 @@ export default function PropertyManagement() {
       setFeatureInput('');
     }
   };
-
   const removeFeature = (feature: string) => {
     setFormData(prev => ({
       ...prev,
       features: prev.features?.filter(f => f !== feature) || []
+    }));
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImages(true);
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach(file => {
+        formData.append('images', file);
+      });
+
+      const response = await fetch('/api/upload/images', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });      const data = await response.json();
+      if (data.success) {
+        setImagePreview(prev => [...prev, ...data.data.images]);
+        // Also update formData images
+        setFormData(prev => ({
+          ...prev,
+          images: [...(prev.images || []), ...data.data.images]
+        }));
+      } else {
+        alert(data.error || 'Failed to upload images');
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      alert('Failed to upload images');
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+  const removeImage = (index: number) => {
+    const newImages = imagePreview.filter((_, i) => i !== index);
+    setImagePreview(newImages);
+    // Also update formData images
+    setFormData(prev => ({
+      ...prev,
+      images: newImages
     }));
   };
 
@@ -196,13 +259,11 @@ export default function PropertyManagement() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6">      {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Property Management</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
+        <h1 className="text-3xl font-extrabold text-gray-900">Property Management</h1>        <button
+          onClick={handleAdd}
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors font-semibold shadow-lg"
         >
           <Plus size={20} />
           <span>Add Property</span>
@@ -213,20 +274,18 @@ export default function PropertyManagement() {
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <input
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />            <input
               type="text"
               placeholder="Search properties..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              className="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
             />
           </div>
-          
-          <select
+            <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
           >
             <option value="all">All Status</option>
             <option value="ongoing">Ongoing</option>
@@ -237,7 +296,7 @@ export default function PropertyManagement() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
           >
             <option value="all">All Types</option>
             <option value="residential">Residential</option>
@@ -246,7 +305,7 @@ export default function PropertyManagement() {
             <option value="apartment">Apartment</option>
           </select>
 
-          <button className="flex items-center justify-center space-x-2 p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+          <button className="flex items-center justify-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700">
             <Filter size={16} />
             <span>More Filters</span>
           </button>
@@ -260,30 +319,29 @@ export default function PropertyManagement() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading properties...</p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
+        ) : (          <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
                     Property
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
                     Location
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
                     Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
                     Details
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -292,19 +350,22 @@ export default function PropertyManagement() {
                 {properties.map((property) => (
                   <tr key={property.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-12 w-12">
+                      <div className="flex items-center">                        <div className="flex-shrink-0 h-12 w-12">
                           <img
-                            className="h-12 w-12 rounded-lg object-cover"
-                            src={property.images[0] || '/api/placeholder/100/100'}
+                            className="h-12 w-12 rounded-lg object-cover border"
+                            src={property.images && property.images[0] ? property.images[0] : 'https://via.placeholder.com/100x100?text=No+Image'}
                             alt={property.title}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://via.placeholder.com/100x100?text=No+Image';
+                            }}
                           />
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-bold text-gray-900">
                             {property.title}
                           </div>
-                          <div className="text-sm text-gray-500 flex items-center">
+                          <div className="text-sm font-medium text-gray-700 flex items-center">
                             <MapPin size={12} className="mr-1" />
                             {property.location}
                           </div>
@@ -312,20 +373,20 @@ export default function PropertyManagement() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{property.location}</div>
+                      <div className="text-sm font-medium text-gray-900">{property.location}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-green-600">{property.price}</div>
+                      <div className="text-sm font-bold text-green-600">{property.price}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(property.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${getStatusColor(property.status)}`}>
                         {property.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 capitalize">{property.type}</div>
+                      <div className="text-sm font-medium text-gray-900 capitalize">{property.type}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center">
                           <Home size={12} className="mr-1" />
@@ -394,17 +455,16 @@ export default function PropertyManagement() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Basic Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">                  {/* Basic Information */}
                   <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Basic Information</h4>
+                    <h4 className="font-semibold text-gray-900 text-lg">Basic Information</h4>
                     
                     <input
                       type="text"
                       placeholder="Property Title"
                       value={formData.title || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
                       required
                     />
 
@@ -413,7 +473,7 @@ export default function PropertyManagement() {
                       rows={4}
                       value={formData.description || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
                       required
                     />
 
@@ -422,7 +482,7 @@ export default function PropertyManagement() {
                       placeholder="Location"
                       value={formData.location || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
                       required
                     />
 
@@ -432,7 +492,7 @@ export default function PropertyManagement() {
                         placeholder="Price (e.g., ₹2.5 Cr)"
                         value={formData.price || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
                         required
                       />
 
@@ -441,7 +501,7 @@ export default function PropertyManagement() {
                         placeholder="Area (e.g., 1200 sq ft)"
                         value={formData.area || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, area: e.target.value }))}
-                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
                         required
                       />
                     </div>
@@ -449,13 +509,13 @@ export default function PropertyManagement() {
 
                   {/* Property Details */}
                   <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Property Details</h4>
+                    <h4 className="font-semibold text-gray-900 text-lg">Property Details</h4>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <select
                         value={formData.status || 'upcoming'}
                         onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
-                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
                       >
                         <option value="upcoming">Upcoming</option>
                         <option value="ongoing">Ongoing</option>
@@ -465,7 +525,7 @@ export default function PropertyManagement() {
                       <select
                         value={formData.type || 'residential'}
                         onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
-                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
                       >
                         <option value="residential">Residential</option>
                         <option value="commercial">Commercial</option>
@@ -480,7 +540,7 @@ export default function PropertyManagement() {
                         placeholder="Bedrooms"
                         value={formData.bedrooms || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, bedrooms: parseInt(e.target.value) || 0 }))}
-                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
                         min="0"
                       />
 
@@ -489,29 +549,27 @@ export default function PropertyManagement() {
                         placeholder="Bathrooms"
                         value={formData.bathrooms || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, bathrooms: parseInt(e.target.value) || 0 }))}
-                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium text-gray-900"
                         min="0"
                       />
                     </div>
                   </div>
-                </div>
-
-                {/* Amenities */}
+                </div>                {/* Amenities */}
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Amenities</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3 text-lg">Amenities</h4>
                   <div className="flex space-x-2 mb-3">
                     <input
                       type="text"
                       placeholder="Add amenity"
                       value={amenityInput}
                       onChange={(e) => setAmenityInput(e.target.value)}
-                      className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium"
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAmenity())}
                     />
                     <button
                       type="button"
                       onClick={addAmenity}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                      className="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 font-semibold"
                     >
                       Add
                     </button>
@@ -520,7 +578,7 @@ export default function PropertyManagement() {
                     {formData.amenities?.map((amenity, index) => (
                       <span
                         key={index}
-                        className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center"
+                        className="bg-blue-100 text-blue-800 px-3 py-2 rounded-full text-sm flex items-center font-medium"
                       >
                         {amenity}
                         <button
@@ -533,24 +591,22 @@ export default function PropertyManagement() {
                       </span>
                     ))}
                   </div>
-                </div>
-
-                {/* Features */}
+                </div>{/* Features */}
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Key Features</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3 text-lg">Key Features</h4>
                   <div className="flex space-x-2 mb-3">
                     <input
                       type="text"
                       placeholder="Add feature"
                       value={featureInput}
                       onChange={(e) => setFeatureInput(e.target.value)}
-                      className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-medium"
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
                     />
                     <button
                       type="button"
                       onClick={addFeature}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                      className="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 font-semibold"
                     >
                       Add
                     </button>
@@ -559,7 +615,7 @@ export default function PropertyManagement() {
                     {formData.features?.map((feature, index) => (
                       <span
                         key={index}
-                        className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center"
+                        className="bg-green-100 text-green-800 px-3 py-2 rounded-full text-sm flex items-center font-medium"
                       >
                         {feature}
                         <button
@@ -574,18 +630,79 @@ export default function PropertyManagement() {
                   </div>
                 </div>
 
-                {/* Form Actions */}
+                {/* Property Images */}
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3 text-lg flex items-center">
+                    <ImageIcon className="mr-2" size={20} />
+                    Property Images
+                  </h4>
+                  
+                  {/* Image Upload */}
+                  <div className="mb-4">
+                    <label className="block w-full">
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer">
+                        <div className="flex flex-col items-center">
+                          <Camera className="h-12 w-12 text-gray-400 mb-2" />
+                          <p className="text-gray-600 font-medium">
+                            {uploadingImages ? 'Uploading...' : 'Click to upload images or drag and drop'}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            PNG, JPG, JPEG up to 10MB each
+                          </p>
+                        </div>
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={uploadingImages}
+                      />
+                    </label>
+                  </div>
+
+                  {/* Image Preview Grid */}
+                  {imagePreview.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+                      {imagePreview.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={image}
+                            alt={`Property image ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {uploadingImages && (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                      <p className="mt-2 text-gray-600 font-medium">Uploading images...</p>
+                    </div>
+                  )}
+                </div>                {/* Form Actions */}
                 <div className="flex space-x-4 pt-6 border-t">
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-semibold text-gray-700"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                    disabled={uploadingImages}
+                    className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save size={16} />
                     <span>{editingProperty ? 'Update Property' : 'Create Property'}</span>

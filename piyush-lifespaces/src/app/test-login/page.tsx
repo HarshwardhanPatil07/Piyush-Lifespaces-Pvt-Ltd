@@ -1,10 +1,16 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 
-export default function TestLogin() {  const testLogin = async () => {
+export default function TestLogin() {
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const testLogin = async () => {
+    setLoading(true);
+    setResult('Testing login...\n');
+    
     try {
-      console.log('Testing login...');
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
