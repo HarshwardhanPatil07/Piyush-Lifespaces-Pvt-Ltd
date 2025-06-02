@@ -1,6 +1,10 @@
 {
   "version": 2,
   "name": "piyush-lifespaces",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
   "build": {
     "env": {
       "NODE_ENV": "production"
