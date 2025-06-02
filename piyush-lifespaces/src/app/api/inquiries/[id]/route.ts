@@ -1,74 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createDatabaseService } from '@/lib/database';
+import Inquiry, { IInquiry } from '@/models/Inquiry';
 
-// Mock database for inquiries (in production, this would be from MongoDB)
-let inquiries = [
-  {
-    id: '1',
-    name: 'Rajesh Kumar',
-    email: 'rajesh@email.com',
-    phone: '+91 9876543210',
-    property: 'Luxury Villa in Banjara Hills',
-    propertyId: '1',
-    message: 'Interested in scheduling a site visit. Please contact me at your earliest convenience.',
-    status: 'new',
-    priority: 'medium',
-    source: 'website',
-    budget: '₹2-3 Cr',
-    notes: '',
-    createdAt: '2024-01-20T10:30:00Z',
-    updatedAt: '2024-01-20T10:30:00Z'
-  },
-  {
-    id: '2',
-    name: 'Priya Sharma',
-    email: 'priya.sharma@email.com',
-    phone: '+91 9876543211',
-    property: 'Premium Apartments in Gachibowli',
-    propertyId: '2',
-    message: 'Looking for 3BHK apartment with good amenities. When can I visit the site?',
-    status: 'contacted',
-    priority: 'high',
-    source: 'website',
-    budget: '₹1-1.5 Cr',
-    notes: 'Interested in 3rd floor unit',
-    createdAt: '2024-01-19T14:15:00Z',
-    updatedAt: '2024-01-19T16:30:00Z'
-  },
-  {
-    id: '3',
-    name: 'Amit Patel',
-    email: 'amit.patel@email.com',
-    phone: '+91 9876543212',
-    property: 'Commercial Complex in HITEC City',
-    propertyId: '3',
-    message: 'Need commercial space for my IT company. Please share more details about available units.',
-    status: 'qualified',
-    priority: 'high',
-    source: 'phone',
-    budget: '₹5-8 Cr',
-    notes: 'Looking for 5000 sq ft space',
-    createdAt: '2024-01-18T09:45:00Z',
-    updatedAt: '2024-01-18T11:20:00Z'
-  }
-];
+const inquiryService = createDatabaseService(Inquiry);
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const inquiry = inquiries.find(i => i.id === params.id);
+    const result = await inquiryService.findById(params.id);
     
-    if (!inquiry) {
+    if (!result.success) {
       return NextResponse.json(
         { success: false, error: 'Inquiry not found' },
         { status: 404 }
       );
     }
 
+    // Mark as read when viewed
+    if (!result.data?.isRead) {
+      await inquiryService.updateById(params.id, { isRead: true });
+    }
+
     return NextResponse.json({
       success: true,
-      data: inquiry
+      data: result.data
     });
   } catch (error) {
     console.error('Error fetching inquiry:', error);
@@ -86,24 +43,24 @@ export async function PUT(
   try {
     const body = await request.json();
     
-    const inquiryIndex = inquiries.findIndex(i => i.id === params.id);
+    // Remove id field if present to avoid conflicts
+    const { id, _id, ...updateData } = body;
     
-    if (inquiryIndex === -1) {
+    const result = await inquiryService.updateById(params.id, {
+      ...updateData,
+      updatedAt: new Date()
+    });
+    
+    if (!result.success) {
       return NextResponse.json(
-        { success: false, error: 'Inquiry not found' },
+        { success: false, error: result.error || 'Inquiry not found' },
         { status: 404 }
       );
     }
 
-    inquiries[inquiryIndex] = {
-      ...inquiries[inquiryIndex],
-      ...body,
-      updatedAt: new Date().toISOString()
-    };
-
     return NextResponse.json({
       success: true,
-      data: inquiries[inquiryIndex],
+      data: result.data,
       message: 'Inquiry updated successfully'
     });
   } catch (error) {
@@ -120,16 +77,14 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const inquiryIndex = inquiries.findIndex(i => i.id === params.id);
+    const result = await inquiryService.deleteById(params.id);
     
-    if (inquiryIndex === -1) {
+    if (!result.success) {
       return NextResponse.json(
-        { success: false, error: 'Inquiry not found' },
+        { success: false, error: result.error || 'Inquiry not found' },
         { status: 404 }
       );
     }
-
-    inquiries.splice(inquiryIndex, 1);
 
     return NextResponse.json({
       success: true,

@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 interface Inquiry {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   phone: string;
@@ -49,17 +49,22 @@ export default function InquiryManagement() {
   useEffect(() => {
     fetchInquiries();
   }, []);
-
   const fetchInquiries = async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/inquiries');
       if (response.ok) {
-        const data = await response.json();
-        setInquiries(data);
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          setInquiries(result.data);
+        } else {
+          console.error('Invalid response format:', result);
+          setInquiries([]);
+        }
       }
     } catch (error) {
       console.error('Error fetching inquiries:', error);
+      setInquiries([]);
     } finally {
       setLoading(false);
     }
@@ -71,12 +76,10 @@ export default function InquiryManagement() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
-      });
-
-      if (response.ok) {
+      });      if (response.ok) {
         setInquiries(prev => 
           prev.map(inquiry => 
-            inquiry.id === inquiryId 
+            inquiry._id === inquiryId 
               ? { ...inquiry, status: status as any, updatedAt: new Date().toISOString() }
               : inquiry
           )
@@ -93,10 +96,8 @@ export default function InquiryManagement() {
     try {
       const response = await fetch(`/api/inquiries/${inquiryId}`, {
         method: 'DELETE'
-      });
-
-      if (response.ok) {
-        setInquiries(prev => prev.filter(inquiry => inquiry.id !== inquiryId));
+      });      if (response.ok) {
+        setInquiries(prev => prev.filter(inquiry => inquiry._id !== inquiryId));
       }
     } catch (error) {
       console.error('Error deleting inquiry:', error);
@@ -213,11 +214,10 @@ export default function InquiryManagement() {
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                     <select
-                      value={selectedInquiry.status}
-                      onChange={(e) => {
+                      value={selectedInquiry.status}                      onChange={(e) => {
                         const newStatus = e.target.value;
                         setSelectedInquiry(prev => prev ? { ...prev, status: newStatus as any } : null);
-                        updateInquiryStatus(selectedInquiry.id, newStatus);
+                        updateInquiryStatus(selectedInquiry._id, newStatus);
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
@@ -363,12 +363,11 @@ export default function InquiryManagement() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
-              </tr>
-            </thead>
+              </tr>            </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredInquiries.map((inquiry) => (
                 <motion.tr
-                  key={inquiry.id}
+                  key={inquiry._id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="hover:bg-gray-50 transition-colors"
@@ -410,12 +409,11 @@ export default function InquiryManagement() {
                           setShowInquiryModal(true);
                         }}
                         className="text-blue-600 hover:text-blue-900 transition-colors"
-                        title="View Details"
-                      >
+                        title="View Details"                      >
                         <Eye size={16} />
                       </button>
                       <button
-                        onClick={() => deleteInquiry(inquiry.id)}
+                        onClick={() => deleteInquiry(inquiry._id)}
                         className="text-red-600 hover:text-red-900 transition-colors"
                         title="Delete"
                       >
