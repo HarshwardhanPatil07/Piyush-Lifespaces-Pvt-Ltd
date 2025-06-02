@@ -22,25 +22,46 @@ export default function ContactForm() {
       [e.target.name]: e.target.value
     }))
   }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     
-    // Simulate form submission
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      setSubmitStatus('success')
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        propertyType: '',
-        message: ''
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          subject: formData.subject,
+          message: formData.message,
+          propertyInterest: formData.propertyType,
+          source: 'contact-form'
+        }),
       })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSubmitStatus('success')
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          propertyType: '',
+          message: ''
+        })
+      } else {
+        setSubmitStatus('error')
+        console.error('Form submission error:', data.error)
+      }
     } catch (error) {
       setSubmitStatus('error')
+      console.error('Form submission error:', error)
     } finally {
       setIsSubmitting(false)
       setTimeout(() => setSubmitStatus('idle'), 5000)

@@ -6,14 +6,20 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "npx tsx scripts/seed.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "axios": "^1.9.0",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.5.0",
     "framer-motion": "^12.15.0",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.511.0",
+    "mongoose": "^8.15.1",
     "next": "15.3.3",
+    "nodemailer": "^7.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.57.0",
@@ -29,6 +35,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "tailwindcss": "^4",
+    "tsx": "^4.19.4",
     "typescript": "^5"
   }
 }
