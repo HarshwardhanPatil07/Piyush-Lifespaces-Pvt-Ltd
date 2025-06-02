@@ -2,7 +2,7 @@
   "version": 2,
   "name": "piyush-lifespaces",
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "installCommand": "npm ci --force",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "build": {
@@ -15,8 +15,5 @@
       "maxDuration": 30
     }
   },
-  "regions": ["iad1"],
-  "github": {
-    "silent": true
-  }
+  "regions": ["iad1"]
 }
