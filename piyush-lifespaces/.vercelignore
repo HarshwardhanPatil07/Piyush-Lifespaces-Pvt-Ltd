@@ -18,13 +18,11 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# Test files
+# Test files in root
 test-*.js
 test-*.ts
 
-# Documentation
+# Documentation (keep essential ones)
 *.md
 !README.md
-
-# Scripts not needed for deployment
-scripts/
+!VERCEL_DEPLOYMENT_READY.md
