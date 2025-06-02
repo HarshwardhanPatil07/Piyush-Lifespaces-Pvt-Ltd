@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 interface Property {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   location: string;
@@ -102,7 +102,6 @@ export default function PropertyManagement() {
     setImagePreview([]);
     setIsModalOpen(true);
   };
-
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this property?')) {
       try {
@@ -111,7 +110,7 @@ export default function PropertyManagement() {
         });
         const data = await response.json();
         if (data.success) {
-          setProperties(properties.filter(p => p.id !== id));
+          setProperties(properties.filter(p => p._id !== id));
         }
       } catch (error) {
         console.error('Error deleting property:', error);
@@ -124,11 +123,10 @@ export default function PropertyManagement() {
     try {
       const method = editingProperty ? 'PUT' : 'POST';
       const url = '/api/properties';
-      
-      const submitData = {
+        const submitData = {
         ...formData,
         images: imagePreview, // Use imagePreview which is synced with uploads
-        id: editingProperty?.id
+        id: editingProperty?._id
       };
       
       console.log('Submitting property data:', submitData);
@@ -146,10 +144,9 @@ export default function PropertyManagement() {
       const data = await response.json();
       console.log('Response from server:', data);
       
-      if (data.success) {
-        if (editingProperty) {
+      if (data.success) {        if (editingProperty) {
           setProperties(properties.map(p => 
-            p.id === editingProperty.id ? data.data : p
+            p._id === editingProperty._id ? data.data : p
           ));
         } else {
           setProperties([...properties, data.data]);
@@ -346,9 +343,8 @@ export default function PropertyManagement() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {properties.map((property) => (
-                  <tr key={property.id} className="hover:bg-gray-50">
+              <tbody className="bg-white divide-y divide-gray-200">                {properties.map((property) => (
+                  <tr key={property._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center">                        <div className="flex-shrink-0 h-12 w-12">
                           <img
@@ -403,9 +399,8 @@ export default function PropertyManagement() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={() => window.open(`/projects/${property.id}`, '_blank')}
+                      <div className="flex space-x-2">                        <button 
+                          onClick={() => window.open(`/projects/${property._id}`, '_blank')}
                           className="text-blue-600 hover:text-blue-900"
                           title="View"
                         >
@@ -417,9 +412,8 @@ export default function PropertyManagement() {
                           title="Edit"
                         >
                           <Edit size={16} />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(property.id)}
+                        </button>                        <button 
+                          onClick={() => handleDelete(property._id)}
                           className="text-red-600 hover:text-red-900"
                           title="Delete"
                         >
