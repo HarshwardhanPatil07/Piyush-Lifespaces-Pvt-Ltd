@@ -24,6 +24,7 @@
     "next": "15.3.3",
     "nodemailer": "^7.0.3",
     "postcss": "^8.5.0",
+    "puppeteer": "^24.10.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.57.0",
