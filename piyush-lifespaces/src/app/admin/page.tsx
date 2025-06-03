@@ -10,11 +10,14 @@ import {
   BarChart, 
   Settings,
   LogOut,
-  Mail
+  Mail,
+  Star
 } from 'lucide-react';
 import PropertyManagement from '@/components/PropertyManagement';
 import InquiryManagement from '@/components/InquiryManagement';
-import ContactManagementSimple from '@/components/ContactManagement-simple';
+import ContactManagement from '@/components/ContactManagement';
+import ReviewManagement from '@/components/ReviewManagement';
+import HomeContentManagement from '@/components/HomeContentManagement';
 
 interface DashboardStats {
   totalProperties: number;
@@ -280,6 +283,7 @@ export default function AdminDashboard() {
                 { id: 'properties', label: 'Properties', icon: Building },
                 { id: 'inquiries', label: 'Inquiries', icon: MessageSquare },
                 { id: 'contacts', label: 'Contacts', icon: Mail },
+                { id: 'reviews', label: 'Reviews', icon: Star },
                 { id: 'content', label: 'Content', icon: FileText },
                 { id: 'settings', label: 'Settings', icon: Settings },
               ].map((item) => {
@@ -303,13 +307,9 @@ export default function AdminDashboard() {
           </div>          {/* Main Content */}          <div className="flex-1">
             {activeTab === 'dashboard' && renderDashboard()}
             {activeTab === 'properties' && <PropertyManagement />}
-            {activeTab === 'inquiries' && <InquiryManagement />}            {activeTab === 'contacts' && <ContactManagementSimple />}
-            {activeTab === 'content' && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Content Management</h2>
-                <p className="text-gray-600">Content management features coming soon...</p>
-              </div>
-            )}
+            {activeTab === 'inquiries' && <InquiryManagement />}
+            {activeTab === 'contacts' && <ContactManagement />}
+            {activeTab === 'reviews' && <ReviewManagement />}            {activeTab === 'content' && <HomeContentManagement />}
             {activeTab === 'settings' && (
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Settings</h2>

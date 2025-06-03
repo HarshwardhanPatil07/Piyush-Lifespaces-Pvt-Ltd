@@ -2,7 +2,7 @@
   "version": 2,
   "name": "piyush-lifespaces",
   "buildCommand": "npm run build",
-  "installCommand": "npm ci --force",
+  "installCommand": "npm ci --include=dev",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "build": {

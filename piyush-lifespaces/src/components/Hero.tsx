@@ -4,38 +4,85 @@ import React, { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react'
 import { motion } from 'framer-motion'
 
+interface Slide {
+  _id: string
+  title: string
+  subtitle: string
+  description: string
+  image: string
+  ctaText: string
+  ctaLink: string
+  order: number
+}
+
 const Hero = () => {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [slides, setSlides] = useState<Slide[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const slides = [
+  // Fallback slides if API fails
+  const fallbackSlides = [
     {
+      _id: 'fallback-1',
       image: '/api/placeholder/1920/800',
       title: 'Luxury Living Redefined',
       subtitle: 'Premium Residential Developments',
       description: 'Experience the pinnacle of modern living with our carefully crafted residential projects that blend luxury, comfort, and innovation.',
-      cta: 'Explore Projects'
+      ctaText: 'Explore Projects',
+      ctaLink: '/projects',
+      order: 1
     },
     {
+      _id: 'fallback-2',
       image: '/api/placeholder/1920/800',
       title: 'Commercial Excellence',
       subtitle: 'Strategic Business Locations',
       description: 'Discover premium commercial spaces designed to elevate your business in prime locations with world-class amenities.',
-      cta: 'View Commercial'
+      ctaText: 'View Commercial',
+      ctaLink: '/projects',
+      order: 2
     },
     {
+      _id: 'fallback-3',
       image: '/api/placeholder/1920/800',
       title: 'Sustainable Development',
       subtitle: 'Building for the Future',
       description: 'Our commitment to sustainable development ensures every project contributes to a greener, more sustainable future.',
-      cta: 'Learn More'
+      ctaText: 'Learn More',
+      ctaLink: '/about',
+      order: 3
     }
   ]
 
+  // Fetch slides from API
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, 5000)
-    return () => clearInterval(timer)
+    const fetchSlides = async () => {
+      try {
+        const response = await fetch('/api/home/slides')
+        const data = await response.json()
+        
+        if (data.success && data.data && data.data.length > 0) {
+          setSlides(data.data)
+        } else {
+          setSlides(fallbackSlides)
+        }
+      } catch (error) {
+        console.error('Error fetching slides:', error)
+        setSlides(fallbackSlides)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSlides()
+  }, [])
+  useEffect(() => {
+    if (slides.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % slides.length)
+      }, 5000)
+      return () => clearInterval(timer)
+    }
   }, [slides.length])
 
   const nextSlide = () => {
@@ -44,6 +91,28 @@ const Hero = () => {
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+  }
+
+  if (loading) {
+    return (
+      <section className="relative h-screen overflow-hidden bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </section>
+    )
+  }
+
+  if (slides.length === 0) {
+    return (
+      <section className="relative h-screen overflow-hidden bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <h1 className="text-4xl font-bold mb-4">Welcome to Piyush Lifespaces</h1>
+          <p className="text-xl">Premium Real Estate Development</p>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -83,10 +152,12 @@ const Hero = () => {
               </h1>
               <p className="text-xl text-white/90 mb-8 leading-relaxed max-w-2xl">
                 {slides[currentSlide].description}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button className="bg-blue-900 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-blue-800 transition-all duration-300 transform hover:scale-105">
-                  {slides[currentSlide].cta}
+              </p>              <div className="flex flex-col sm:flex-row gap-4">
+                <button 
+                  onClick={() => window.location.href = slides[currentSlide].ctaLink}
+                  className="bg-blue-900 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-blue-800 transition-all duration-300 transform hover:scale-105"
+                >
+                  {slides[currentSlide].ctaText}
                 </button>
                 <button className="flex items-center space-x-2 text-white border-2 border-white px-8 py-4 rounded-full text-lg font-medium hover:bg-white hover:text-blue-900 transition-all duration-300">
                   <Play size={20} />

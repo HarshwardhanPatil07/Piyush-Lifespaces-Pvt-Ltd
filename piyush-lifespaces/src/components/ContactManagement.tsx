@@ -15,7 +15,8 @@ import {
   ExternalLink,
   Check,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react'
 
 interface Contact {
@@ -95,6 +96,26 @@ export default function ContactManagement() {
       }
     } catch (error) {
       console.error('Error updating contact status:', error)
+    }
+  }
+
+  const deleteContact = async (contactId: string) => {
+    if (!confirm('Are you sure you want to delete this contact? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/contact?id=${contactId}`, {
+        method: 'DELETE'
+      })
+      if (response.ok) {
+        setContacts(contacts.filter(contact => contact._id !== contactId))
+      } else {
+        alert('Failed to delete contact. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error deleting contact:', error)
+      alert('Failed to delete contact. Please try again.')
     }
   }
 
@@ -255,22 +276,33 @@ export default function ContactManagement() {
                       )}
                     </div>
                     <p className="text-gray-600 truncate">{contact.message}</p>
-                  </div>
-                  <div className="flex flex-col items-end space-y-2">
+                  </div>                  <div className="flex flex-col items-end space-y-2">
                     <div className="flex items-center space-x-1 text-sm text-gray-500">
                       <Calendar className="h-4 w-4" />
                       <span>{new Date(contact.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        openContactModal(contact)
-                      }}
-                      className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      <Eye className="h-4 w-4" />
-                      <span>View</span>
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openContactModal(contact)
+                        }}
+                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>View</span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          deleteContact(contact._id)
+                        }}
+                        className="flex items-center space-x-1 text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>

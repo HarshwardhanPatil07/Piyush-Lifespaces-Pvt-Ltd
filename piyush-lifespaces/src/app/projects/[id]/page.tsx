@@ -90,7 +90,7 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
           ...inquiryForm,
           property: property?.title,
           propertyId: property?._id,
-          source: 'property-page'
+          source: 'website'
         }),
       });
 

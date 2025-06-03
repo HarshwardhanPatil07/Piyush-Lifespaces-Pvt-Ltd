@@ -241,3 +241,36 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Contact ID is required' },
+        { status: 400 }
+      );
+    }    const deletedContact = await contactService.deleteById(id);
+    
+    if (!deletedContact.success) {
+      return NextResponse.json(
+        { success: false, error: deletedContact.error || 'Contact not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Contact deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting contact:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to delete contact' },
+      { status: 500 }
+    );
+  }
+}

@@ -336,8 +336,7 @@ export default function PropertyManagement() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
                     Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
+                  </th>                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
                     Details
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
@@ -345,9 +344,9 @@ export default function PropertyManagement() {
                   </th>
                 </tr>              </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {properties.map((property) => (
-                  <tr key={property._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">                      <div className="flex items-center">
+                {properties.map((property) => (                  <tr key={property._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
                         <div className="flex-shrink-0 h-12 w-12">
                           <img
                             className="h-12 w-12 rounded-lg object-cover border"
@@ -397,9 +396,9 @@ export default function PropertyManagement() {
                         <div className="flex items-center">
                           <Square size={12} className="mr-1" />
                           {property.area}
-                        </div>
-                      </div>
-                    </td>                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        </div>                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button
                           onClick={() => window.open(`/projects/${property._id}`, '_blank')}
