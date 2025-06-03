@@ -70,21 +70,31 @@ export default function AdminDashboard() {
       const statsResponse = await fetch('/api/dashboard/stats');
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
-        setStats(statsData);
+        // Correctly map API response to state
+        if (statsData.success && statsData.data && statsData.data.overview) {
+          setStats({
+            totalProperties: statsData.data.overview.totalProperties || 0,
+            activeInquiries: statsData.data.overview.activeInquiries || 0,
+            monthlyViews: statsData.data.propertyStats?.totalViews || 0,
+            completedSales: statsData.data.propertyStats?.totalPropertyInquiries || 0
+          });
+        }
       }
 
       // Fetch recent properties
       const propertiesResponse = await fetch('/api/properties?limit=3');
       if (propertiesResponse.ok) {
         const propertiesData = await propertiesResponse.json();
-        setRecentProperties(propertiesData.properties || propertiesData);
+        // API returns { success, data: [...] }
+        setRecentProperties(propertiesData.data || []);
       }
 
       // Fetch recent inquiries
       const inquiriesResponse = await fetch('/api/inquiries?limit=3');
       if (inquiriesResponse.ok) {
         const inquiriesData = await inquiriesResponse.json();
-        setRecentInquiries(inquiriesData.inquiries || inquiriesData);
+        // API returns { success, data: [...] }
+        setRecentInquiries(inquiriesData.data || []);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);

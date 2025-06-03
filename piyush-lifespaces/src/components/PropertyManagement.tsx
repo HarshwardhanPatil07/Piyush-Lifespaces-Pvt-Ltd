@@ -318,32 +318,23 @@ export default function PropertyManagement() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading properties...</p>
           </div>
-        ) : (          <div className="overflow-x-auto">
+        ) : properties.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">No properties found.</div>
+        ) : (
+          <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
-                    Property
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
-                    Location
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
-                    Status
-                  </th>                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
-                    Details
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">Property</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">Location</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">Details</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-800 uppercase tracking-wider">Actions</th>
                 </tr>
-              </thead>              <tbody className="bg-white divide-y divide-gray-200">
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
                 {properties.map((property) => (
                   <tr key={property._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
