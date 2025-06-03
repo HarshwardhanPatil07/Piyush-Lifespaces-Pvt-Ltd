@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import ImageUploadComponent from './ImageUploadComponent';
+import VideoUploadComponent from './VideoUploadComponent';
 import { 
   Plus, 
   Edit2, 
@@ -35,7 +36,7 @@ interface HomeVideo {
   _id?: string;
   title: string;
   description: string;
-  videoUrl: string;
+  videoId: string;
   thumbnailImageId: string;
   isActive: boolean;
 }
@@ -288,12 +289,11 @@ export default function HomeContentManagement() {
         ctaLink: '/properties',
         order: slides.length + 1,
         isActive: true
-      });
-    } else if (type === 'video') {
+      });    } else if (type === 'video') {
       setEditingItem(item || {
         title: '',
         description: '',
-        videoUrl: '',
+        videoId: '',
         thumbnailImageId: '',
         isActive: true
       });
@@ -547,10 +547,8 @@ export default function HomeContentManagement() {
   );
 
   const renderModal = () => {
-    if (!showModal || !editingItem) return null;
-
-    const isSlide = editingItem.hasOwnProperty('subtitle');
-    const isVideo = editingItem.hasOwnProperty('videoUrl');
+    if (!showModal || !editingItem) return null;    const isSlide = editingItem.hasOwnProperty('subtitle');
+    const isVideo = editingItem.hasOwnProperty('videoId') || editingItem.hasOwnProperty('videoUrl');
     const isReview = editingItem.hasOwnProperty('rating');
 
     return (
@@ -799,8 +797,12 @@ function VideoForm({ video, onSave, onCancel, saving }: { video: HomeVideo, onSa
     
     // Debug log to check form data
     console.log('Submitting video data:', formData);
+      // Validate that both video and thumbnail are present
+    if (!formData.videoId) {
+      alert('Please upload a video before saving.');
+      return;
+    }
     
-    // Validate that thumbnailImageId is present
     if (!formData.thumbnailImageId) {
       alert('Please upload a thumbnail image before saving.');
       return;
@@ -831,18 +833,17 @@ function VideoForm({ video, onSave, onCancel, saving }: { video: HomeVideo, onSa
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
         />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
-        <input
-          type="url"
-          value={formData.videoUrl}
-          onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          required
-        />
       </div>      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Video Upload</label>
+        <VideoUploadComponent
+          onVideoUploaded={(videoId) => {
+            console.log('Video uploaded:', videoId);
+            setFormData({ ...formData, videoId });
+          }}
+          maxVideos={1}
+          initialVideo={formData.videoId || ''}
+        />
+      </div><div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail Image</label>
         <ImageUploadComponent
           onImagesUploaded={(imageIds) => {

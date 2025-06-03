@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import HomeVideo from '@/models/HomeVideo'
+import VideoAsset from '@/models/VideoAsset'
 
 export async function GET() {
   try {
@@ -26,10 +27,10 @@ export async function POST(request: NextRequest) {
     await connectDB()
     
     const body = await request.json()
-    const { title, description, videoUrl, thumbnailImageId, isActive } = body
+    const { title, description, videoId, thumbnailImageId, isActive } = body
     
     // Validate required fields
-    if (!title || !description || !videoUrl || !thumbnailImageId) {
+    if (!title || !description || !videoId || !thumbnailImageId) {
       return NextResponse.json(
         { success: false, message: 'All fields are required' },
         { status: 400 }
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     const video = new HomeVideo({
       title,
       description,
-      videoUrl,
+      videoId,
       thumbnailImageId,
       isActive: isActive !== false
     })
@@ -70,7 +71,7 @@ export async function PUT(request: NextRequest) {
     await connectDB()
     
     const body = await request.json()
-    const { _id, title, description, videoUrl, thumbnailImageId, isActive } = body
+    const { _id, title, description, videoId, thumbnailImageId, isActive } = body
     
     if (!_id) {
       return NextResponse.json(
@@ -89,7 +90,7 @@ export async function PUT(request: NextRequest) {
       {
         title,
         description,
-        videoUrl,
+        videoId,
         thumbnailImageId,
         isActive,
         updatedAt: new Date()
@@ -113,6 +114,55 @@ export async function PUT(request: NextRequest) {
     console.error('Error updating home video:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to update video' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    await connectDB()
+    
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: 'Video ID is required' },
+        { status: 400 }
+      )
+    }
+    
+    // Get the video to find associated video asset
+    const video = await HomeVideo.findById(id)
+    
+    if (!video) {
+      return NextResponse.json(
+        { success: false, message: 'Video not found' },
+        { status: 404 }
+      )
+    }
+    
+    // Delete the video asset if it exists
+    if (video.videoId) {
+      try {
+        await VideoAsset.findByIdAndDelete(video.videoId)
+      } catch (error) {
+        console.warn('Could not delete video asset:', error)
+      }
+    }
+    
+    // Delete the home video record
+    await HomeVideo.findByIdAndDelete(id)
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Video deleted successfully'
+    })
+  } catch (error) {
+    console.error('Error deleting home video:', error)
+    return NextResponse.json(
+      { success: false, message: 'Failed to delete video' },
       { status: 500 }
     )
   }

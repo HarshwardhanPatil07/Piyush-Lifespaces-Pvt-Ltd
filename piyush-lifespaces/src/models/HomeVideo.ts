@@ -4,8 +4,10 @@ export interface IHomeVideo {
   _id?: string
   title: string
   description: string
-  videoUrl: string
-  thumbnailUrl: string
+  videoId?: string
+  videoUrl?: string // For backward compatibility
+  thumbnailImageId?: string
+  thumbnailUrl?: string // For backward compatibility
   isActive: boolean
   createdAt?: Date
   updatedAt?: Date
@@ -22,15 +24,20 @@ const HomeVideoSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Description is required'],
     trim: true,
-    maxLength: [300, 'Description cannot exceed 300 characters']
+    maxLength: [300, 'Description cannot exceed 300 characters']  },  videoId: {
+    type: String,
+    required: false // Make optional for backward compatibility
   },
   videoUrl: {
     type: String,
-    required: [true, 'Video URL is required']
+    required: false // For backward compatibility
+  },thumbnailImageId: {
+    type: String,
+    required: false // Make optional for backward compatibility
   },
   thumbnailUrl: {
     type: String,
-    required: [true, 'Thumbnail URL is required']
+    required: false // For backward compatibility
   },
   isActive: {
     type: Boolean,

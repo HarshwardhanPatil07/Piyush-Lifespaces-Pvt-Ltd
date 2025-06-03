@@ -8,8 +8,10 @@ interface VideoContent {
   _id: string;
   title: string;
   description: string;
-  videoUrl: string;
-  thumbnailUrl: string;
+  videoId?: string;
+  videoUrl?: string; // For backward compatibility
+  thumbnailImageId?: string;
+  thumbnailUrl?: string; // For backward compatibility
   isActive: boolean;
 }
 
@@ -149,10 +151,8 @@ export default function VideoSection() {
                   video.muted = isMuted;
                   // Sync initial state
                   setIsPlaying(!video.paused);
-                }
-              }}
-            >
-              <source src={videoContent.videoUrl} type="video/mp4" />
+                }              }}            >
+              <source src={videoContent.videoId ? `/api/videos/${videoContent.videoId}` : videoContent.videoUrl} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
 
