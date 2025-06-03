@@ -65,30 +65,42 @@ export default function HomeContentManagement() {
   useEffect(() => {
     fetchData();
   }, []);
-
   const fetchData = async () => {
     try {
       setLoading(true);
+      
       const [slidesRes, videosRes, reviewsRes] = await Promise.all([
         fetch('/api/admin/home-slides'),
         fetch('/api/admin/home-video'),
         fetch('/api/admin/featured-reviews')
-      ]);      if (slidesRes.ok) {
+      ]);
+
+      if (slidesRes.ok) {
         const slidesData = await slidesRes.json();
-        setSlides(slidesData.data || []);
+        setSlides(Array.isArray(slidesData.data) ? slidesData.data : []);
+      } else {
+        console.error('Failed to fetch slides:', slidesRes.status);        setSlides([]);
       }
 
       if (videosRes.ok) {
         const videosData = await videosRes.json();
-        setVideos(videosData.data || []);
+        setVideos(Array.isArray(videosData.data) ? videosData.data : []);
+      } else {
+        console.error('Failed to fetch videos:', videosRes.status);        setVideos([]);
       }
 
       if (reviewsRes.ok) {
         const reviewsData = await reviewsRes.json();
-        setFeaturedReviews(reviewsData.data || []);
+        setFeaturedReviews(Array.isArray(reviewsData.data) ? reviewsData.data : []);
+      } else {
+        console.error('Failed to fetch reviews:', reviewsRes.status);        setFeaturedReviews([]);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
+      // Ensure all states are properly initialized even on error
+      setSlides([]);
+      setVideos([]);
+      setFeaturedReviews([]);
     } finally {
       setLoading(false);
     }
@@ -351,10 +363,8 @@ export default function HomeContentManagement() {
           <Plus size={20} />
           <span>Add Video</span>
         </button>
-      </div>
-
-      <div className="grid gap-4">
-        {videos.map((video) => (
+      </div>      <div className="grid gap-4">
+        {Array.isArray(videos) && videos.map((video) => (
           <motion.div
             key={video._id}
             initial={{ opacity: 0, y: 20 }}
