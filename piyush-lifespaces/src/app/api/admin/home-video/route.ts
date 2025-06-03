@@ -26,10 +26,10 @@ export async function POST(request: NextRequest) {
     await connectDB()
     
     const body = await request.json()
-    const { title, description, videoUrl, thumbnailUrl, isActive } = body
+    const { title, description, videoUrl, thumbnailImageId, isActive } = body
     
     // Validate required fields
-    if (!title || !description || !videoUrl || !thumbnailUrl) {
+    if (!title || !description || !videoUrl || !thumbnailImageId) {
       return NextResponse.json(
         { success: false, message: 'All fields are required' },
         { status: 400 }
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       title,
       description,
       videoUrl,
-      thumbnailUrl,
+      thumbnailImageId,
       isActive: isActive !== false
     })
     
@@ -70,7 +70,7 @@ export async function PUT(request: NextRequest) {
     await connectDB()
     
     const body = await request.json()
-    const { _id, title, description, videoUrl, thumbnailUrl, isActive } = body
+    const { _id, title, description, videoUrl, thumbnailImageId, isActive } = body
     
     if (!_id) {
       return NextResponse.json(
@@ -90,7 +90,7 @@ export async function PUT(request: NextRequest) {
         title,
         description,
         videoUrl,
-        thumbnailUrl,
+        thumbnailImageId,
         isActive,
         updatedAt: new Date()
       },

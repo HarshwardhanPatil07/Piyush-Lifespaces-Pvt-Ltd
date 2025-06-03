@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import ImageUploadComponent from './ImageUploadComponent';
 import { 
   Plus, 
   Edit2, 
@@ -23,7 +24,7 @@ interface HomeSlide {
   title: string;
   subtitle: string;
   description: string;
-  image: string;
+  imageId: string;
   ctaText: string;
   ctaLink: string;
   order: number;
@@ -35,14 +36,14 @@ interface HomeVideo {
   title: string;
   description: string;
   videoUrl: string;
-  thumbnailUrl: string;
+  thumbnailImageId: string;
   isActive: boolean;
 }
 
 interface FeaturedReview {
   _id?: string;
   customerName: string;
-  customerImage?: string;
+  customerImageId?: string;
   rating: number;
   reviewText: string;
   propertyName?: string;
@@ -105,97 +106,117 @@ export default function HomeContentManagement() {
       setLoading(false);
     }
   };
-
   const handleSaveSlide = async (slideData: HomeSlide) => {
     try {
       setSaving(true);
-      const url = slideData._id 
-        ? `/api/admin/home-slides/${slideData._id}`
-        : '/api/admin/home-slides';
+      const url = '/api/admin/home-slides';
+      const method = slideData._id ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
-        method: slideData._id ? 'PUT' : 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(slideData)
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('Slide saved successfully:', result);
         await fetchData();
         setShowModal(false);
         setEditingItem(null);
+      } else {
+        const error = await response.json();
+        console.error('Failed to save slide:', error);
+        alert(`Failed to save slide: ${error.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error saving slide:', error);
+      alert('Error saving slide. Please try again.');
     } finally {
       setSaving(false);
     }
   };
-
   const handleSaveVideo = async (videoData: HomeVideo) => {
     try {
       setSaving(true);
-      const url = videoData._id 
-        ? `/api/admin/home-video/${videoData._id}`
-        : '/api/admin/home-video';
+      const url = '/api/admin/home-video';
+      const method = videoData._id ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
-        method: videoData._id ? 'PUT' : 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(videoData)
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('Video saved successfully:', result);
         await fetchData();
         setShowModal(false);
         setEditingItem(null);
+      } else {
+        const error = await response.json();
+        console.error('Failed to save video:', error);
+        alert(`Failed to save video: ${error.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error saving video:', error);
+      alert('Error saving video. Please try again.');
     } finally {
       setSaving(false);
     }
   };
-
   const handleSaveFeaturedReview = async (reviewData: FeaturedReview) => {
     try {
       setSaving(true);
-      const url = reviewData._id 
-        ? `/api/admin/featured-reviews/${reviewData._id}`
-        : '/api/admin/featured-reviews';
+      const url = '/api/admin/featured-reviews';
+      const method = reviewData._id ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
-        method: reviewData._id ? 'PUT' : 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reviewData)
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('Review saved successfully:', result);
         await fetchData();
         setShowModal(false);
         setEditingItem(null);
+      } else {
+        const error = await response.json();
+        console.error('Failed to save review:', error);
+        alert(`Failed to save review: ${error.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error saving featured review:', error);
+      alert('Error saving review. Please try again.');
     } finally {
       setSaving(false);
     }
   };
-
   const handleDelete = async (type: string, id: string) => {
     if (!confirm('Are you sure you want to delete this item?')) return;
 
     try {
-      const url = `/api/admin/${type}/${id}`;
+      const url = `/api/admin/${type}?id=${id}`;
       const response = await fetch(url, { method: 'DELETE' });
       
       if (response.ok) {
+        const result = await response.json();
+        console.log('Item deleted successfully:', result);
         await fetchData();
+      } else {
+        const error = await response.json();
+        console.error('Failed to delete item:', error);
+        alert(`Failed to delete item: ${error.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error deleting item:', error);
+      alert('Error deleting item. Please try again.');
     }
   };
-
   const handleReorderSlides = async (slideId: string, direction: 'up' | 'down') => {
     const currentSlide = slides.find(s => s._id === slideId);
     if (!currentSlide) return;
@@ -203,43 +224,66 @@ export default function HomeContentManagement() {
     const newOrder = direction === 'up' ? currentSlide.order - 1 : currentSlide.order + 1;
     
     try {
-      const response = await fetch(`/api/admin/home-slides/${slideId}`, {
+      const response = await fetch('/api/admin/home-slides', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...currentSlide, order: newOrder })
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('Slide reordered successfully:', result);
         await fetchData();
+      } else {
+        const error = await response.json();
+        console.error('Failed to reorder slide:', error);
       }
     } catch (error) {
       console.error('Error reordering slide:', error);
     }
   };
-
   const toggleActive = async (type: string, id: string, currentStatus: boolean) => {
     try {
-      const response = await fetch(`/api/admin/${type}/${id}`, {
+      // Find the current item to get all its data
+      let currentItem;
+      if (type === 'home-slides') {
+        currentItem = slides.find(s => s._id === id);
+      } else if (type === 'home-video') {
+        currentItem = videos.find(v => v._id === id);
+      } else if (type === 'featured-reviews') {
+        currentItem = featuredReviews.find(r => r._id === id);
+      }
+      
+      if (!currentItem) {
+        console.error('Item not found for toggle');
+        return;
+      }
+      
+      const response = await fetch(`/api/admin/${type}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !currentStatus })
+        body: JSON.stringify({ ...currentItem, isActive: !currentStatus })
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('Item toggled successfully:', result);
         await fetchData();
+      } else {
+        const error = await response.json();
+        console.error('Failed to toggle item:', error);
       }
     } catch (error) {
       console.error('Error toggling status:', error);
     }
   };
-
   const openModal = (type: string, item?: any) => {
     if (type === 'slide') {
       setEditingItem(item || {
         title: '',
         subtitle: '',
         description: '',
-        image: '',
+        imageId: '',
         ctaText: 'Learn More',
         ctaLink: '/properties',
         order: slides.length + 1,
@@ -250,13 +294,13 @@ export default function HomeContentManagement() {
         title: '',
         description: '',
         videoUrl: '',
-        thumbnailUrl: '',
+        thumbnailImageId: '',
         isActive: true
       });
     } else if (type === 'review') {
       setEditingItem(item || {
         customerName: '',
-        customerImage: '',
+        customerImageId: undefined,
         rating: 5,
         reviewText: '',
         propertyName: '',
@@ -264,8 +308,12 @@ export default function HomeContentManagement() {
         order: featuredReviews.length + 1,
         isCustom: true
       });
-    }
-    setShowModal(true);
+    }    setShowModal(true);
+  };
+
+  const handleCancel = () => {
+    setShowModal(false);
+    setEditingItem(null);
   };
 
   const renderSlidesSection = () => (
@@ -290,10 +338,9 @@ export default function HomeContentManagement() {
             className="bg-white rounded-lg shadow-md p-6 border"
           >
             <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center space-x-4">                  {slide.image && (
+              <div className="flex-1">                <div className="flex items-center space-x-4">                  {slide.imageId && (
                     <img
-                      src={slide.image}
+                      src={`/api/images/${slide.imageId}`}
                       alt={slide.title}
                       className="w-20 h-12 object-cover rounded"
                     />
@@ -372,11 +419,10 @@ export default function HomeContentManagement() {
             className="bg-white rounded-lg shadow-md p-6 border"
           >
             <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center space-x-4">
-                  {video.thumbnailUrl && (
+              <div className="flex-1">                <div className="flex items-center space-x-4">
+                  {video.thumbnailImageId && (
                     <img
-                      src={video.thumbnailUrl}
+                      src={`/api/images/${video.thumbnailImageId}`}
                       alt={video.title}
                       className="w-20 h-12 object-cover rounded"
                     />
@@ -440,11 +486,10 @@ export default function HomeContentManagement() {
             className="bg-white rounded-lg shadow-md p-6 border"
           >
             <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center space-x-4 mb-2">
-                  {review.customerImage && (
+              <div className="flex-1">                <div className="flex items-center space-x-4 mb-2">
+                  {review.customerImageId && (
                     <img
-                      src={review.customerImage}
+                      src={`/api/images/${review.customerImageId}`}
                       alt={review.customerName}
                       className="w-12 h-12 object-cover rounded-full"
                     />
@@ -514,20 +559,18 @@ export default function HomeContentManagement() {
           <div className="flex justify-between items-center p-6 border-b">
             <h3 className="text-xl font-bold text-gray-900">
               {editingItem._id ? 'Edit' : 'Add'} {isSlide ? 'Slide' : isVideo ? 'Video' : 'Review'}
-            </h3>
-            <button
-              onClick={() => setShowModal(false)}
+            </h3>            <button
+              onClick={handleCancel}
               className="text-gray-400 hover:text-gray-600"
             >
               <X size={24} />
             </button>
-          </div>
-
-          <div className="p-6">
+          </div>          <div className="p-6">
             {isSlide && (
               <SlideForm
                 slide={editingItem}
                 onSave={handleSaveSlide}
+                onCancel={handleCancel}
                 saving={saving}
               />
             )}
@@ -536,6 +579,7 @@ export default function HomeContentManagement() {
               <VideoForm
                 video={editingItem}
                 onSave={handleSaveVideo}
+                onCancel={handleCancel}
                 saving={saving}
               />
             )}
@@ -544,6 +588,7 @@ export default function HomeContentManagement() {
               <ReviewForm
                 review={editingItem}
                 onSave={handleSaveFeaturedReview}
+                onCancel={handleCancel}
                 saving={saving}
               />
             )}
@@ -608,11 +653,21 @@ export default function HomeContentManagement() {
 }
 
 // Form Components
-function SlideForm({ slide, onSave, saving }: { slide: HomeSlide, onSave: (slide: HomeSlide) => void, saving: boolean }) {
+function SlideForm({ slide, onSave, onCancel, saving }: { slide: HomeSlide, onSave: (slide: HomeSlide) => void, onCancel: () => void, saving: boolean }) {
   const [formData, setFormData] = useState(slide);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Debug log to check form data
+    console.log('Submitting slide data:', formData);
+    
+    // Validate that imageId is present
+    if (!formData.imageId) {
+      alert('Please upload an image before saving.');
+      return;
+    }
+    
     onSave(formData);
   };
 
@@ -649,15 +704,19 @@ function SlideForm({ slide, onSave, saving }: { slide: HomeSlide, onSave: (slide
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
         />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-        <input
-          type="url"          value={formData.image}
-          onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          required
+      </div>      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Slide Image</label>
+        <ImageUploadComponent
+          onImagesUploaded={(imageIds) => {
+            console.log('Images uploaded for slide:', imageIds);
+            if (imageIds.length > 0) {
+              setFormData({ ...formData, imageId: imageIds[0] });
+            } else {
+              setFormData({ ...formData, imageId: '' });
+            }
+          }}
+          maxImages={1}
+          initialImages={formData.imageId ? [formData.imageId] : []}
         />
       </div>
 
@@ -707,14 +766,13 @@ function SlideForm({ slide, onSave, saving }: { slide: HomeSlide, onSave: (slide
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
             />
             <span className="ml-2 text-sm text-gray-700">Active</span>
-          </label>
-        </div>
+          </label>        </div>
       </div>
 
       <div className="flex justify-end space-x-4 pt-4">
         <button
           type="button"
-          onClick={() => {}}
+          onClick={onCancel}
           className="px-4 py-2 text-gray-600 hover:text-gray-800"
         >
           Cancel
@@ -733,11 +791,21 @@ function SlideForm({ slide, onSave, saving }: { slide: HomeSlide, onSave: (slide
   );
 }
 
-function VideoForm({ video, onSave, saving }: { video: HomeVideo, onSave: (video: HomeVideo) => void, saving: boolean }) {
+function VideoForm({ video, onSave, onCancel, saving }: { video: HomeVideo, onSave: (video: HomeVideo) => void, onCancel: () => void, saving: boolean }) {
   const [formData, setFormData] = useState(video);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Debug log to check form data
+    console.log('Submitting video data:', formData);
+    
+    // Validate that thumbnailImageId is present
+    if (!formData.thumbnailImageId) {
+      alert('Please upload a thumbnail image before saving.');
+      return;
+    }
+    
     onSave(formData);
   };
 
@@ -774,16 +842,19 @@ function VideoForm({ video, onSave, saving }: { video: HomeVideo, onSave: (video
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
         />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail URL</label>
-        <input
-          type="url"
-          value={formData.thumbnailUrl}
-          onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          required
+      </div>      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail Image</label>
+        <ImageUploadComponent
+          onImagesUploaded={(imageIds) => {
+            console.log('Images uploaded for video:', imageIds);
+            if (imageIds.length > 0) {
+              setFormData({ ...formData, thumbnailImageId: imageIds[0] });
+            } else {
+              setFormData({ ...formData, thumbnailImageId: '' });
+            }
+          }}
+          maxImages={1}
+          initialImages={formData.thumbnailImageId ? [formData.thumbnailImageId] : []}
         />
       </div>
 
@@ -797,12 +868,10 @@ function VideoForm({ video, onSave, saving }: { video: HomeVideo, onSave: (video
           />
           <span className="ml-2 text-sm text-gray-700">Active</span>
         </label>
-      </div>
-
-      <div className="flex justify-end space-x-4 pt-4">
+      </div>      <div className="flex justify-end space-x-4 pt-4">
         <button
           type="button"
-          onClick={() => {}}
+          onClick={onCancel}
           className="px-4 py-2 text-gray-600 hover:text-gray-800"
         >
           Cancel
@@ -821,11 +890,15 @@ function VideoForm({ video, onSave, saving }: { video: HomeVideo, onSave: (video
   );
 }
 
-function ReviewForm({ review, onSave, saving }: { review: FeaturedReview, onSave: (review: FeaturedReview) => void, saving: boolean }) {
+function ReviewForm({ review, onSave, onCancel, saving }: { review: FeaturedReview, onSave: (review: FeaturedReview) => void, onCancel: () => void, saving: boolean }) {
   const [formData, setFormData] = useState(review);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Debug log to check form data
+    console.log('Submitting review data:', formData);
+    
     onSave(formData);
   };
 
@@ -840,15 +913,19 @@ function ReviewForm({ review, onSave, saving }: { review: FeaturedReview, onSave
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
         />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Image URL (Optional)</label>
-        <input
-          type="url"
-          value={formData.customerImage || ''}
-          onChange={(e) => setFormData({ ...formData, customerImage: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      </div>      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Image (Optional)</label>
+        <ImageUploadComponent
+          onImagesUploaded={(imageIds) => {
+            console.log('Images uploaded for review:', imageIds);
+            if (imageIds.length > 0) {
+              setFormData({ ...formData, customerImageId: imageIds[0] });
+            } else {
+              setFormData({ ...formData, customerImageId: undefined });
+            }
+          }}
+          maxImages={1}
+          initialImages={formData.customerImageId ? [formData.customerImageId] : []}
         />
       </div>
 
@@ -911,12 +988,10 @@ function ReviewForm({ review, onSave, saving }: { review: FeaturedReview, onSave
             <span className="ml-2 text-sm text-gray-700">Active</span>
           </label>
         </div>
-      </div>
-
-      <div className="flex justify-end space-x-4 pt-4">
+      </div>      <div className="flex justify-end space-x-4 pt-4">
         <button
           type="button"
-          onClick={() => {}}
+          onClick={onCancel}
           className="px-4 py-2 text-gray-600 hover:text-gray-800"
         >
           Cancel

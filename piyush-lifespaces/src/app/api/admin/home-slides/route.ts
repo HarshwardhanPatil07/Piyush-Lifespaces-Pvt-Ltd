@@ -28,10 +28,10 @@ export async function POST(request: NextRequest) {
     await connectDB()
     
     const body = await request.json()
-    const { title, subtitle, description, image, ctaText, ctaLink, order, isActive } = body
+    const { title, subtitle, description, imageId, ctaText, ctaLink, order, isActive } = body
     
     // Validate required fields
-    if (!title || !subtitle || !description || !image || !ctaText || !ctaLink) {
+    if (!title || !subtitle || !description || !imageId || !ctaText || !ctaLink) {
       return NextResponse.json(
         { success: false, message: 'All fields are required' },
         { status: 400 }
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       title,
       subtitle,
       description,
-      image,
+      imageId,
       ctaText,
       ctaLink,
       order: order || 0,
@@ -70,7 +70,7 @@ export async function PUT(request: NextRequest) {
     await connectDB()
     
     const body = await request.json()
-    const { _id, title, subtitle, description, image, ctaText, ctaLink, order, isActive } = body
+    const { _id, title, subtitle, description, imageId, ctaText, ctaLink, order, isActive } = body
     
     if (!_id) {
       return NextResponse.json(
@@ -85,7 +85,7 @@ export async function PUT(request: NextRequest) {
         title,
         subtitle,
         description,
-        image,
+        imageId,
         ctaText,
         ctaLink,
         order,

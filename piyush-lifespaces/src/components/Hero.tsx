@@ -9,7 +9,8 @@ interface Slide {
   title: string
   subtitle: string
   description: string
-  image: string
+  image?: string
+  imageId?: string
   ctaText: string
   ctaLink: string
   order: number
@@ -124,10 +125,9 @@ const Hero = () => {
           className={`absolute inset-0 transition-opacity duration-1000 ${
             index === currentSlide ? 'opacity-100' : 'opacity-0'
           }`}
-        >
-          <div 
+        >          <div 
             className="w-full h-full bg-cover bg-center bg-gray-300"
-            style={{ backgroundImage: `url(${slide.image})` }}
+            style={{ backgroundImage: `url(${slide.imageId ? `/api/images/${slide.imageId}` : slide.image})` }}
           >
             <div className="absolute inset-0 bg-black/40" />
           </div>

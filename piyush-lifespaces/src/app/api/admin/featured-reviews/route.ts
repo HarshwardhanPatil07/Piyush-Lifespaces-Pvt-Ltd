@@ -28,12 +28,12 @@ export async function POST(request: NextRequest) {
     await connectDB()
     
     const body = await request.json()
-    const { name, location, rating, review, image, property, order, isActive, isCustom, reviewId } = body
+    const { name, location, rating, review, imageId, property, order, isActive, isCustom, reviewId } = body
     
-    // Validate required fields
-    if (!name || !location || !rating || !review || !image || !property) {
+    // Validate required fields (imageId is optional for customer image)
+    if (!name || !location || !rating || !review || !property) {
       return NextResponse.json(
-        { success: false, message: 'All fields are required' },
+        { success: false, message: 'Name, location, rating, review, and property are required' },
         { status: 400 }
       )
     }
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       location,
       rating,
       review,
-      image,
+      imageId,
       property,
       order: order || 0,
       isActive: isActive !== false,
@@ -72,7 +72,7 @@ export async function PUT(request: NextRequest) {
     await connectDB()
     
     const body = await request.json()
-    const { _id, name, location, rating, review, image, property, order, isActive } = body
+    const { _id, name, location, rating, review, imageId, property, order, isActive } = body
     
     if (!_id) {
       return NextResponse.json(
@@ -88,7 +88,7 @@ export async function PUT(request: NextRequest) {
         location,
         rating,
         review,
-        image,
+        imageId,
         property,
         order,
         isActive,
