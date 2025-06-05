@@ -55,9 +55,7 @@ export default function TestimonialsSection() {
       property: "Piyush Commercial Plaza",
       order: 3
     }
-  ]
-
-  // Fetch featured reviews from API
+  ]  // Fetch featured reviews from API
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
@@ -185,8 +183,7 @@ export default function TestimonialsSection() {
               style={{
                 transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`
               }}
-            >
-              {testimonials.map((testimonial) => (
+            >              {testimonials.map((testimonial) => (
                 <div
                   key={testimonial._id}
                   className="w-full md:w-1/3 flex-shrink-0 px-3"
@@ -227,8 +224,7 @@ export default function TestimonialsSection() {
                         <p className="text-gray-600 text-sm">
                           {testimonial.location} • {testimonial.property}
                         </p>
-                      </div>
-                    </div>
+                      </div>                    </div>
                   </motion.div>
                 </div>
               ))}

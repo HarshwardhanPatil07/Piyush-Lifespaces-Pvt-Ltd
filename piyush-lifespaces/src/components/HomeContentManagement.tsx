@@ -296,11 +296,10 @@ export default function HomeContentManagement() {
         videoId: '',
         thumbnailImageId: '',
         isActive: true
-      });
-    } else if (type === 'review') {
+      });    } else if (type === 'review') {
       setEditingItem(item || {
         customerName: '',
-        customerImageId: undefined,
+        customerImageId: '',
         rating: 5,
         reviewText: '',
         propertyName: '',
@@ -308,7 +307,7 @@ export default function HomeContentManagement() {
         order: featuredReviews.length + 1,
         isCustom: true
       });
-    }    setShowModal(true);
+    }setShowModal(true);
   };
 
   const handleCancel = () => {
@@ -1177,7 +1176,17 @@ function VideoForm({ video, onSave, onCancel, saving }: { video: HomeVideo, onSa
 }
 
 function ReviewForm({ review, onSave, onCancel, saving }: { review: FeaturedReview, onSave: (review: FeaturedReview) => void, onCancel: () => void, saving: boolean }) {
-  const [formData, setFormData] = useState(review);
+  const [formData, setFormData] = useState({
+    ...review,
+    customerName: review.customerName || '',
+    customerImageId: review.customerImageId || '',
+    rating: review.rating || 5,
+    reviewText: review.reviewText || '',
+    propertyName: review.propertyName || '',
+    isActive: review.isActive !== undefined ? review.isActive : true,
+    order: review.order || 1,
+    isCustom: review.isCustom !== undefined ? review.isCustom : true
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1200,14 +1209,13 @@ function ReviewForm({ review, onSave, onCancel, saving }: { review: FeaturedRevi
           required
         />
       </div>      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Image (Optional)</label>
-        <ImageUploadComponent
+        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Image (Optional)</label>        <ImageUploadComponent
           onImagesUploaded={(imageIds) => {
             console.log('Images uploaded for review:', imageIds);
             if (imageIds.length > 0) {
               setFormData({ ...formData, customerImageId: imageIds[0] });
             } else {
-              setFormData({ ...formData, customerImageId: undefined });
+              setFormData({ ...formData, customerImageId: '' });
             }
           }}
           maxImages={1}
@@ -1238,13 +1246,11 @@ function ReviewForm({ review, onSave, onCancel, saving }: { review: FeaturedRevi
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
         />
-      </div>
-
-      <div>
+      </div>      <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Property Name (Optional)</label>
         <input
           type="text"
-          value={formData.propertyName || ''}
+          value={formData.propertyName}
           onChange={(e) => setFormData({ ...formData, propertyName: e.target.value })}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
