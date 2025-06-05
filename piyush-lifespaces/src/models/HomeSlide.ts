@@ -5,7 +5,7 @@ export interface IHomeSlide {
   title: string
   subtitle: string
   description: string
-  image: string
+  imageId: string
   ctaText: string
   ctaLink: string
   order: number
@@ -32,10 +32,9 @@ const HomeSlideSchema = new mongoose.Schema({
     required: [true, 'Description is required'],
     trim: true,
     maxLength: [300, 'Description cannot exceed 300 characters']
-  },
-  image: {
+  },  imageId: {
     type: String,
-    required: [true, 'Image URL is required']
+    required: [true, 'Image ID is required']
   },
   ctaText: {
     type: String,

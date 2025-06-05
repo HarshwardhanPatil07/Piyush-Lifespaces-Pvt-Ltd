@@ -17,6 +17,11 @@ export const metadata: Metadata = {
   title: "Piyush Lifespaces - Premium Real Estate Development",
   description: "Leading real estate developer specializing in luxury residential and commercial properties. Discover our premium projects and investment opportunities.",
   keywords: "real estate, property development, luxury homes, commercial properties, Piyush Lifespaces",
+  icons: {
+    icon: '/images/piyush-logo.jpg',
+    shortcut: '/images/piyush-logo.jpg',
+    apple: '/images/piyush-logo.jpg',
+  },
 };
 
 export default function RootLayout({

@@ -30,11 +30,15 @@ const Navbar = () => {
       isScrolled ? 'bg-white shadow-lg' : 'bg-white/90 backdrop-blur-sm'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+        <div className="flex justify-between items-center h-16">          {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center">
-              <div className="text-2xl font-bold text-blue-900">
+            <Link href="/" className="flex items-center space-x-2 md:space-x-3">
+              <img 
+                src="/images/piyush-logo.jpg" 
+                alt="Piyush Lifespaces Logo" 
+                className="h-8 md:h-10 w-auto object-contain"
+              />
+              <div className="text-lg md:text-2xl font-bold text-blue-900">
                 Piyush <span className="text-gold-600">Lifespaces</span>
               </div>
             </Link>

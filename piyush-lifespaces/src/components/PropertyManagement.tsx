@@ -21,6 +21,7 @@ import {
   Image as ImageIcon,
   Camera
 } from 'lucide-react';
+import ImageUploadComponent from './ImageUploadComponent';
 
 interface Property {
   _id: string;
@@ -34,7 +35,7 @@ interface Property {
   status: 'ongoing' | 'completed' | 'upcoming';
   type: 'residential' | 'commercial' | 'villa' | 'apartment';
   amenities: string[];
-  images: string[];
+  images: string[]; // Now stores image IDs instead of base64 strings
   features: string[];
   createdAt: string;
   updatedAt: string;
@@ -62,11 +63,9 @@ export default function PropertyManagement() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
-  const [formData, setFormData] = useState<Partial<Property>>(defaultProperty);  const [amenityInput, setAmenityInput] = useState('');
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);  const [formData, setFormData] = useState<Partial<Property>>(defaultProperty);
+  const [amenityInput, setAmenityInput] = useState('');
   const [featureInput, setFeatureInput] = useState('');
-  const [uploadingImages, setUploadingImages] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string[]>([]);
 
   useEffect(() => {
     fetchProperties();
@@ -92,14 +91,12 @@ export default function PropertyManagement() {
   };  const handleEdit = (property: Property) => {
     setEditingProperty(property);
     setFormData(property);
-    setImagePreview(property.images || []);
     setIsModalOpen(true);
   };
 
   const handleAdd = () => {
     setEditingProperty(null);
     setFormData(defaultProperty);
-    setImagePreview([]);
     setIsModalOpen(true);
   };
   const handleDelete = async (id: string) => {
@@ -116,21 +113,19 @@ export default function PropertyManagement() {
         console.error('Error deleting property:', error);
       }
     }
-  };
-  const handleSubmit = async (e: React.FormEvent) => {
+  };  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       const method = editingProperty ? 'PUT' : 'POST';
       const url = '/api/properties';
-        const submitData = {
+      
+      const submitData = {
         ...formData,
-        images: imagePreview, // Use imagePreview which is synced with uploads
         id: editingProperty?._id
       };
       
       console.log('Submitting property data:', submitData);
-      console.log('Images being submitted:', imagePreview);
       
       const response = await fetch(url, {
         method,
@@ -144,7 +139,8 @@ export default function PropertyManagement() {
       const data = await response.json();
       console.log('Response from server:', data);
       
-      if (data.success) {        if (editingProperty) {
+      if (data.success) {
+        if (editingProperty) {
           setProperties(properties.map(p => 
             p._id === editingProperty._id ? data.data : p
           ));
@@ -159,15 +155,12 @@ export default function PropertyManagement() {
       console.error('Error saving property:', error);
       alert('Failed to save property');
     }
-  };
-  const closeModal = () => {
+  };  const closeModal = () => {
     setIsModalOpen(false);
     setEditingProperty(null);
     setFormData(defaultProperty);
     setAmenityInput('');
     setFeatureInput('');
-    setImagePreview([]);
-    setUploadingImages(false);
   };
 
   const addAmenity = () => {
@@ -195,54 +188,18 @@ export default function PropertyManagement() {
       }));
       setFeatureInput('');
     }
-  };
-  const removeFeature = (feature: string) => {
+  };  const removeFeature = (feature: string) => {
     setFormData(prev => ({
       ...prev,
       features: prev.features?.filter(f => f !== feature) || []
     }));
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    setUploadingImages(true);
-    try {
-      const formData = new FormData();
-      Array.from(files).forEach(file => {
-        formData.append('images', file);
-      });
-
-      const response = await fetch('/api/upload/images', {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      });      const data = await response.json();
-      if (data.success) {
-        setImagePreview(prev => [...prev, ...data.data.images]);
-        // Also update formData images
-        setFormData(prev => ({
-          ...prev,
-          images: [...(prev.images || []), ...data.data.images]
-        }));
-      } else {
-        alert(data.error || 'Failed to upload images');
-      }
-    } catch (error) {
-      console.error('Error uploading images:', error);
-      alert('Failed to upload images');
-    } finally {
-      setUploadingImages(false);
-    }
-  };
-  const removeImage = (index: number) => {
-    const newImages = imagePreview.filter((_, i) => i !== index);
-    setImagePreview(newImages);
-    // Also update formData images
+  // Handle image updates from ImageUploadComponent
+  const handleImagesUploaded = (imageIds: string[]) => {
     setFormData(prev => ({
       ...prev,
-      images: newImages
+      images: imageIds
     }));
   };
 
@@ -616,69 +573,20 @@ export default function PropertyManagement() {
                       </span>
                     ))}
                   </div>
-                </div>
-
-                {/* Property Images */}
+                </div>                {/* Property Images */}
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-3 text-lg flex items-center">
                     <ImageIcon className="mr-2" size={20} />
                     Property Images
                   </h4>
                   
-                  {/* Image Upload */}
-                  <div className="mb-4">
-                    <label className="block w-full">
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer">
-                        <div className="flex flex-col items-center">
-                          <Camera className="h-12 w-12 text-gray-400 mb-2" />
-                          <p className="text-gray-600 font-medium">
-                            {uploadingImages ? 'Uploading...' : 'Click to upload images or drag and drop'}
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            PNG, JPG, JPEG up to 10MB each
-                          </p>
-                        </div>
-                      </div>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        disabled={uploadingImages}
-                      />
-                    </label>
-                  </div>
-
-                  {/* Image Preview Grid */}
-                  {imagePreview.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
-                      {imagePreview.map((image, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={image}
-                            alt={`Property image ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg border"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {uploadingImages && (
-                    <div className="text-center py-4">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                      <p className="mt-2 text-gray-600 font-medium">Uploading images...</p>
-                    </div>
-                  )}
-                </div>                {/* Form Actions */}
+                  <ImageUploadComponent
+                    onImagesUploaded={handleImagesUploaded}
+                    propertyId={editingProperty?._id}
+                    maxImages={10}
+                    initialImages={formData.images || []}
+                  />
+                </div>{/* Form Actions */}
                 <div className="flex space-x-4 pt-6 border-t">
                   <button
                     type="button"
@@ -686,11 +594,9 @@ export default function PropertyManagement() {
                     className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-semibold text-gray-700"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </button>                  <button
                     type="submit"
-                    disabled={uploadingImages}
-                    className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 font-semibold"
                   >
                     <Save size={16} />
                     <span>{editingProperty ? 'Update Property' : 'Create Property'}</span>

@@ -4,12 +4,12 @@ import ImageAsset from '@/models/ImageAsset';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    const imageId = params?.id;
+    const { id: imageId } = await params;
     if (!imageId) {
       return NextResponse.json(
         { error: 'Image ID is required' },
@@ -46,12 +46,12 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    const imageId = params.id;
+    const { id: imageId } = await params;
     const deletedImage = await ImageAsset.findByIdAndDelete(imageId);
 
     if (!deletedImage) {

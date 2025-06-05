@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
+import ImageAsset from '@/models/ImageAsset';
+import sharp from 'sharp';
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,12 +9,13 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const files = formData.getAll('images') as File[];
+    const propertyId = formData.get('propertyId') as string;
     
     if (!files || files.length === 0) {
       return NextResponse.json({ success: false, error: 'No files provided' }, { status: 400 });
     }
 
-    const uploadedImages: string[] = [];
+    const uploadedImages: { id: string; url: string; filename: string }[] = [];
 
     for (const file of files) {
       if (file.size > 10 * 1024 * 1024) { // 10MB limit
@@ -22,15 +25,61 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
 
-      // Convert file to base64 for MongoDB storage
+      // Validate file type
+      if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Invalid file type. Only JPEG, PNG, and WebP are allowed.' 
+        }, { status: 400 });
+      }
+
+      // Process and optimize image
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      const base64 = buffer.toString('base64');
-      const mimeType = file.type;
       
-      // Create data URL for storage
-      const dataUrl = `data:${mimeType};base64,${base64}`;
-      uploadedImages.push(dataUrl);
+      // Optimize image using Sharp
+      const optimizedBuffer = await sharp(buffer)
+        .resize(1920, 1080, { 
+          fit: 'inside', 
+          withoutEnlargement: true 
+        })
+        .jpeg({ 
+          quality: 85, 
+          progressive: true 
+        })
+        .toBuffer();
+
+      // Get image metadata
+      const metadata = await sharp(optimizedBuffer).metadata();
+      
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const filename = `property_${timestamp}_${randomString}.jpg`;
+
+      // Save to MongoDB
+      const imageAsset = new ImageAsset({
+        filename,
+        originalName: file.name,
+        mimeType: 'image/jpeg', // Always convert to JPEG for consistency
+        size: optimizedBuffer.length,
+        data: optimizedBuffer,
+        metadata: {
+          width: metadata.width,
+          height: metadata.height,
+          propertyId: propertyId || undefined,
+          uploadedBy: 'admin', // Could be extracted from JWT token
+        }
+      });
+
+      const savedImage = await imageAsset.save();
+      
+      // Return image reference
+      uploadedImages.push({
+        id: savedImage._id.toString(),
+        url: `/api/images/${savedImage.filename}`,
+        filename: savedImage.filename
+      });
     }
 
     return NextResponse.json({

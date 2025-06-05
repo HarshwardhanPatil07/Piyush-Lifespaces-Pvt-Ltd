@@ -6,10 +6,11 @@ const inquiryService = createDatabaseService(Inquiry);
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const result = await inquiryService.findById(params.id);
+    const { id } = await params;
+    const result = await inquiryService.findById(id);
     
     if (!result.success) {
       return NextResponse.json(
@@ -38,15 +39,16 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: inquiryId } = await params;
     const body = await request.json();
     
     // Remove id field if present to avoid conflicts
     const { id, _id, ...updateData } = body;
     
-    const result = await inquiryService.updateById(params.id, {
+    const result = await inquiryService.updateById(inquiryId, {
       ...updateData,
       updatedAt: new Date()
     });
@@ -74,10 +76,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const result = await inquiryService.deleteById(params.id);
+    const { id } = await params;
+    const result = await inquiryService.deleteById(id);
     
     if (!result.success) {
       return NextResponse.json(

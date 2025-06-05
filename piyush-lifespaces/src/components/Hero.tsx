@@ -93,11 +93,15 @@ const Hero = () => {
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
   }
-
   if (loading) {
     return (
       <section className="relative h-screen overflow-hidden bg-gray-900 flex items-center justify-center">
         <div className="text-white text-center">
+          <img 
+            src="/images/piyush-logo.jpg" 
+            alt="Piyush Lifespaces Logo" 
+            className="h-16 w-auto object-contain mx-auto mb-6"
+          />
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p>Loading...</p>
         </div>
@@ -109,6 +113,11 @@ const Hero = () => {
     return (
       <section className="relative h-screen overflow-hidden bg-gray-900 flex items-center justify-center">
         <div className="text-white text-center">
+          <img 
+            src="/images/piyush-logo.jpg" 
+            alt="Piyush Lifespaces Logo" 
+            className="h-20 w-auto object-contain mx-auto mb-6"
+          />
           <h1 className="text-4xl font-bold mb-4">Welcome to Piyush Lifespaces</h1>
           <p className="text-xl">Premium Real Estate Development</p>
         </div>
@@ -132,9 +141,7 @@ const Hero = () => {
             <div className="absolute inset-0 bg-black/40" />
           </div>
         </div>
-      ))}
-
-      {/* Content */}
+      ))}      {/* Content */}
       <div className="relative z-10 h-full flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="max-w-3xl">
@@ -144,6 +151,20 @@ const Hero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
+              {/* Company Logo */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, delay: 0.2 }}
+                className="mb-6"
+              >
+                <img 
+                  src="/images/piyush-logo.jpg" 
+                  alt="Piyush Lifespaces Logo" 
+                  className="h-16 md:h-20 w-auto object-contain mb-4"
+                />
+              </motion.div>
+              
               <p className="text-gold-400 text-lg mb-4 font-medium">
                 {slides[currentSlide].subtitle}
               </p>

@@ -18,7 +18,11 @@ import {
   EyeOff,
   ChevronUp,
   ChevronDown,
-  Play
+  Play,
+  User,
+  MapPin,
+  Home,
+  Quote
 } from 'lucide-react';
 
 interface HomeSlide {
@@ -312,17 +316,29 @@ export default function HomeContentManagement() {
         thumbnailImageId: '',
         isActive: true
       });    } else if (type === 'review') {
-      setEditingItem(item || {
-        customerName: '',
-        customerLocation: '',
-        customerImageId: '',
-        rating: 5,
-        reviewText: '',
-        propertyName: '',
-        isActive: true,
-        order: featuredReviews.length + 1,
-        isCustom: true
-      });
+      if (item) {
+        // Map API field names to form field names when editing existing review
+        setEditingItem({
+          ...item,
+          customerName: item.name || item.customerName || '',
+          customerLocation: item.location || item.customerLocation || '',
+          reviewText: item.review || item.reviewText || '',
+          customerImageId: item.imageId || item.customerImageId || '',
+        });
+      } else {
+        // Default values for new review
+        setEditingItem({
+          customerName: '',
+          customerLocation: '',
+          customerImageId: '',
+          rating: 5,
+          reviewText: '',
+          propertyName: '',
+          isActive: true,
+          order: featuredReviews.length + 1,
+          isCustom: true
+        });
+      }
     }setShowModal(true);
   };
 
@@ -1055,7 +1071,7 @@ function SlideForm({ slide, onSave, onCancel, saving }: { slide: HomeSlide, onSa
           <input
             type="number"
             value={formData.order}
-            onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+            onChange={(e) => setFormData({ ...formData, order: Number(e.target.value) || 1 })}
             min="1"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             required
@@ -1203,11 +1219,11 @@ function ReviewForm({ review, onSave, onCancel, saving }: { review: FeaturedRevi
     customerName: review.customerName || '',
     customerLocation: review.customerLocation || '',
     customerImageId: review.customerImageId || '',
-    rating: review.rating || 5,
+    rating: Number(review.rating) || 5,
     reviewText: review.reviewText || '',
     propertyName: review.propertyName || '',
     isActive: review.isActive !== undefined ? review.isActive : true,
-    order: review.order || 1,
+    order: Number(review.order) || 1,
     isCustom: review.isCustom !== undefined ? review.isCustom : true
   });
 
@@ -1221,117 +1237,210 @@ function ReviewForm({ review, onSave, onCancel, saving }: { review: FeaturedRevi
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Form Section */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>        <input
-          type="text"
-          value={formData.customerName}
-          onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Location</label>
-        <input
-          type="text"
-          value={formData.customerLocation}
-          onChange={(e) => setFormData({ ...formData, customerLocation: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="e.g., Mumbai, Delhi, Bangalore"
-          required
-        />
-      </div>      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Image (Optional)</label><ImageUploadComponent
-          onImagesUploaded={(imageIds) => {
-            console.log('Images uploaded for review:', imageIds);
-            if (imageIds.length > 0) {
-              setFormData({ ...formData, customerImageId: imageIds[0] });
-            } else {
-              setFormData({ ...formData, customerImageId: '' });
-            }
-          }}
-          maxImages={1}
-          initialImages={formData.customerImageId ? [formData.customerImageId] : []}
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-        <select
-          value={formData.rating}
-          onChange={(e) => setFormData({ ...formData, rating: parseInt(e.target.value) })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          required
-        >
-          {[5, 4, 3, 2, 1].map(rating => (
-            <option key={rating} value={rating}>{rating} Star{rating !== 1 ? 's' : ''}</option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Review Text</label>
-        <textarea
-          value={formData.reviewText}
-          onChange={(e) => setFormData({ ...formData, reviewText: e.target.value })}
-          rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          required
-        />
-      </div>      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Property Name (Optional)</label>
-        <input
-          type="text"
-          value={formData.propertyName}
-          onChange={(e) => setFormData({ ...formData, propertyName: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Order</label>
-          <input
-            type="number"
-            value={formData.order}
-            onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
-            min="1"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-
-        <div className="flex items-center">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={formData.isActive}
-              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+        <h4 className="text-lg font-semibold text-gray-900 mb-4">Edit Review</h4>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>        <input
+              type="text"
+              value={formData.customerName}
+              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
             />
-            <span className="ml-2 text-sm text-gray-700">Active</span>
-          </label>
-        </div>
-      </div>      <div className="flex justify-end space-x-4 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 text-gray-600 hover:text-gray-800"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-        >
-          {saving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
-          <Save size={20} />
-          <span>Save</span>
-        </button>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Customer Location</label>
+            <input
+              type="text"
+              value={formData.customerLocation}
+              onChange={(e) => setFormData({ ...formData, customerLocation: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="e.g., Mumbai, Delhi, Bangalore"
+              required
+            />
+          </div>      <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Customer Image (Optional)</label><ImageUploadComponent
+              onImagesUploaded={(imageIds) => {
+                console.log('Images uploaded for review:', imageIds);
+                if (imageIds.length > 0) {
+                  setFormData({ ...formData, customerImageId: imageIds[0] });
+                } else {
+                  setFormData({ ...formData, customerImageId: '' });
+                }
+              }}
+              maxImages={1}
+              initialImages={formData.customerImageId ? [formData.customerImageId] : []}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>            <select
+              value={formData.rating}
+              onChange={(e) => setFormData({ ...formData, rating: Number(e.target.value) || 5 })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              {[5, 4, 3, 2, 1].map(rating => (
+                <option key={rating} value={rating}>{rating} Star{rating !== 1 ? 's' : ''}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Review Text</label>
+            <textarea
+              value={formData.reviewText}
+              onChange={(e) => setFormData({ ...formData, reviewText: e.target.value })}
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>      <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Property Name (Optional)</label>
+            <input
+              type="text"
+              value={formData.propertyName}
+              onChange={(e) => setFormData({ ...formData, propertyName: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Order</label>
+              <input
+                type="number"
+                value={formData.order}
+                onChange={(e) => setFormData({ ...formData, order: Number(e.target.value) || 1 })}
+                min="1"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div className="flex items-center">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                />
+                <span className="ml-2 text-sm text-gray-700">Active</span>
+              </label>
+            </div>
+          </div>      <div className="flex justify-end space-x-4 pt-4">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+            >
+              {saving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+              <Save size={20} />
+              <span>Save</span>
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
+
+      {/* Preview Section */}
+      <div>
+        <h4 className="text-lg font-semibold text-gray-900 mb-4">Preview</h4>
+        <div className="bg-gray-50 p-4 rounded-lg border">
+          <div className="bg-white rounded-lg shadow-md p-6 border">
+            <div className="flex items-center space-x-4 mb-4">
+              {formData.customerImageId ? (
+                <img
+                  src={`/api/images/${formData.customerImageId}`}
+                  alt={formData.customerName || 'Customer'}
+                  className="w-12 h-12 object-cover rounded-full"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== "/images/default-avatar.svg") {
+                      target.src = "/images/default-avatar.svg";
+                    }
+                  }}
+                />
+              ) : (
+                <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-gray-500" />
+                </div>
+              )}
+              <div>
+                <h5 className="font-bold text-gray-900">
+                  {formData.customerName || 'Customer Name'}
+                </h5>
+                <div className="flex items-center space-x-1 mb-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={16}
+                      className={i < formData.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}
+                    />
+                  ))}
+                </div>
+                {formData.customerLocation && (
+                  <p className="text-sm text-gray-500 flex items-center">
+                    <MapPin size={12} className="mr-1" />
+                    {formData.customerLocation}
+                  </p>
+                )}
+                {formData.propertyName && (
+                  <p className="text-xs text-gray-500 flex items-center">
+                    <Home size={12} className="mr-1" />
+                    {formData.propertyName}
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            <div className="relative">
+              <Quote className="absolute top-0 left-0 w-6 h-6 text-gray-300 -mt-2 -ml-1" />
+              <p className="text-gray-600 italic pl-6">
+                {formData.reviewText || 'Review text will appear here...'}
+              </p>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+              <span>Order: {formData.order}</span>
+              <div className="flex items-center space-x-2">
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  formData.isActive 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {formData.isActive ? 'Active' : 'Inactive'}
+                </span>
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                  {formData.isCustom ? 'Custom' : 'From Reviews'}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 text-sm text-gray-600">
+            <p className="font-medium mb-2">How it will appear:</p>
+            <ul className="list-disc list-inside space-y-1 text-xs">
+              <li>This preview shows how the review will look on your website</li>
+              <li>Customer image will show default avatar if not uploaded</li>
+              <li>Star rating is displayed visually</li>
+              <li>Only active reviews appear on the frontend</li>
+              <li>Lower order numbers appear first</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

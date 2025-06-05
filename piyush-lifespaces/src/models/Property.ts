@@ -9,12 +9,11 @@ export interface IProperty extends Document {
   bedrooms: number;
   bathrooms: number;
   status: 'ongoing' | 'completed' | 'upcoming';
-  type: 'residential' | 'commercial' | 'villa' | 'apartment';
-  amenities: string[];
-  images: string[];
+  type: 'residential' | 'commercial' | 'villa' | 'apartment';  amenities: string[];
+  images: string[]; // Array of image asset IDs referencing ImageAsset collection
   features: string[];
-  gallery?: string[];
-  floorPlans?: string[];
+  gallery?: string[]; // Array of image asset IDs for additional gallery images
+  floorPlans?: string[]; // Array of image asset IDs for floor plan images
   videoUrl?: string;
   brochureUrl?: string;
   coordinates?: {
@@ -51,12 +50,11 @@ const PropertySchema = new Schema<IProperty>({
     required: true, 
     enum: ['residential', 'commercial', 'villa', 'apartment'],
     default: 'residential'
-  },
-  amenities: [{ type: String }],
-  images: [{ type: String }],
+  },  amenities: [{ type: String }],
+  images: [{ type: String }], // References to ImageAsset document IDs
   features: [{ type: String }],
-  gallery: [{ type: String }],
-  floorPlans: [{ type: String }],
+  gallery: [{ type: String }], // References to ImageAsset document IDs
+  floorPlans: [{ type: String }], // References to ImageAsset document IDs
   videoUrl: { type: String },
   brochureUrl: { type: String },
   coordinates: {
