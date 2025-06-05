@@ -7,16 +7,19 @@ export async function GET() {
   try {
     await connectDB()
     
-    const video = await HomeVideo.findOne({}).lean()
+    // Return all videos for admin management, sorted by creation date
+    const videos = await HomeVideo.find({})
+      .sort({ createdAt: -1 })
+      .lean()
     
     return NextResponse.json({
       success: true,
-      data: video
+      data: videos
     })
   } catch (error) {
-    console.error('Error fetching home video:', error)
+    console.error('Error fetching home videos:', error)
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch video' },
+      { success: false, message: 'Failed to fetch videos' },
       { status: 500 }
     )
   }

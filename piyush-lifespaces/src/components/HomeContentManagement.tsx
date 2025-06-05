@@ -17,7 +17,8 @@ import {
   Eye,
   EyeOff,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Play
 } from 'lucide-react';
 
 interface HomeSlide {
@@ -82,10 +83,9 @@ export default function HomeContentManagement() {
         setSlides(Array.isArray(slidesData.data) ? slidesData.data : []);
       } else {
         console.error('Failed to fetch slides:', slidesRes.status);        setSlides([]);
-      }
-
-      if (videosRes.ok) {
+      }      if (videosRes.ok) {
         const videosData = await videosRes.json();
+        console.log('Videos data received:', videosData);
         setVideos(Array.isArray(videosData.data) ? videosData.data : []);
       } else {
         console.error('Failed to fetch videos:', videosRes.status);        setVideos([]);
@@ -377,8 +377,7 @@ export default function HomeContentManagement() {
                 >
                   <ChevronDown size={20} />
                 </button>
-                
-                <button
+                  <button
                   onClick={() => openModal('slide', slide)}
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded"
                 >
@@ -398,71 +397,357 @@ export default function HomeContentManagement() {
       </div>
     </div>
   );
+  const renderVideosSection = () => {
+    const activeVideo = videos.find(video => video.isActive);
+    const inactiveVideos = videos.filter(video => !video.isActive);
+    
+    console.log('Rendering videos section:', {
+      totalVideos: videos.length,
+      activeVideo: activeVideo ? { id: activeVideo._id, title: activeVideo.title, videoId: activeVideo.videoId } : null,
+      inactiveVideosCount: inactiveVideos.length
+    });
 
-  const renderVideosSection = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-gray-900">Video Content</h3>
-        <button
-          onClick={() => openModal('video')}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-        >
-          <Plus size={20} />
-          <span>Add Video</span>
-        </button>
-      </div>      <div className="grid gap-4">
-        {Array.isArray(videos) && videos.map((video) => (
-          <motion.div
-            key={video._id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg shadow-md p-6 border"
+    return (
+      <div className="space-y-8">
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-bold text-gray-900">Video Content</h3>
+          <button
+            onClick={() => openModal('video')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">                <div className="flex items-center space-x-4">
-                  {video.thumbnailImageId && (
-                    <img
-                      src={`/api/images/${video.thumbnailImageId}`}
-                      alt={video.title}
-                      className="w-20 h-12 object-cover rounded"
-                    />
-                  )}
-                  <div>
-                    <h4 className="font-bold text-gray-900">{video.title}</h4>
-                    <p className="text-sm text-gray-600">{video.description}</p>
-                  </div>
-                </div>
+            <Plus size={20} />
+            <span>Add Video</span>
+          </button>
+        </div>        {/* Current Active Video Section */}
+        {activeVideo ? (
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Star className="h-5 w-5 text-yellow-500 fill-current" />
+                <h4 className="text-lg font-semibold text-gray-900">Currently Active Video</h4>
+                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">LIVE</span>
               </div>
-              
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => toggleActive('home-video', video._id!, video.isActive)}
-                  className={`p-2 rounded ${video.isActive ? 'text-green-600' : 'text-gray-400'}`}
-                  title={video.isActive ? 'Active' : 'Inactive'}
+                  onClick={() => fetchData()}
+                  className="bg-white text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-1 text-sm border border-gray-200"
                 >
-                  {video.isActive ? <Eye size={20} /> : <EyeOff size={20} />}
+                  <span>Refresh</span>
                 </button>
-                
                 <button
-                  onClick={() => openModal('video', video)}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                  onClick={() => openModal('video', activeVideo)}
+                  className="bg-white text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors flex items-center space-x-1 text-sm border border-blue-200"
                 >
-                  <Edit2 size={20} />
+                  <Edit2 size={16} />
+                  <span>Edit</span>
                 </button>
-                
                 <button
-                  onClick={() => handleDelete('home-video', video._id!)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded"
+                  onClick={() => handleDelete('home-video', activeVideo._id!)}
+                  className="bg-white text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors flex items-center space-x-1 text-sm border border-red-200"
                 >
-                  <Trash2 size={20} />
+                  <Trash2 size={16} />
+                  <span>Delete</span>
                 </button>
               </div>
             </div>
-          </motion.div>
-        ))}
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Enhanced Video Preview */}
+              <div className="space-y-4">
+                {activeVideo.videoId ? (
+                  <div className="relative bg-black rounded-lg overflow-hidden shadow-lg group">                    <video
+                      id={`video-preview-${activeVideo._id}`}
+                      src={`/api/videos/${activeVideo.videoId}`}
+                      className="w-full h-48 object-contain"
+                      muted
+                      playsInline
+                      preload="metadata"
+                      poster={activeVideo.thumbnailImageId ? `/api/images/${activeVideo.thumbnailImageId}` : undefined}onLoadStart={() => {
+                        console.log('🎬 Video loading:', activeVideo.videoId);
+                      }}
+                      onLoadedMetadata={() => {
+                        console.log('📹 Video metadata ready:', activeVideo.videoId);
+                      }}
+                      onLoadedData={() => {
+                        console.log('✅ Video data loaded:', activeVideo.videoId);
+                      }}
+                      onCanPlay={() => {
+                        console.log('▶️ Video ready to play:', activeVideo.videoId);
+                      }}onError={(e) => {
+                        const videoElement = e.currentTarget as HTMLVideoElement;
+                        const error = videoElement.error;
+                        
+                        // Only log if there's an actual error
+                        if (error) {
+                          console.error('Video preview error for:', activeVideo.videoId, {
+                            errorCode: error.code,
+                            errorMessage: error.message,
+                            videoSrc: `/api/videos/${activeVideo.videoId}`,
+                            networkState: videoElement.networkState,
+                            readyState: videoElement.readyState
+                          });
+                        }
+                      }}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                    
+                    {/* Video Controls Overlay */}
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <button
+                        onClick={() => {
+                          const videoElement = document.querySelector(`#video-preview-${activeVideo._id}`) as HTMLVideoElement;
+                          if (videoElement) {
+                            if (videoElement.paused) {
+                              videoElement.play();
+                            } else {
+                              videoElement.pause();
+                            }
+                          }
+                        }}
+                        className="bg-white/90 text-blue-600 p-4 rounded-full hover:bg-white transition-all duration-200 shadow-lg transform hover:scale-110"
+                        title="Play/Pause video preview"
+                      >
+                        <Play size={24} />
+                      </button>
+                    </div>
+                  </div>
+                ) : activeVideo.thumbnailImageId ? (
+                  <div className="relative bg-gray-100 rounded-lg overflow-hidden shadow-lg h-48">
+                    <img
+                      src={`/api/images/${activeVideo.thumbnailImageId}`}
+                      alt={activeVideo.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                      <span className="bg-white/90 text-gray-600 px-3 py-2 rounded-lg text-sm">
+                        No Video File
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
+                    <div className="text-center">
+                      <Video className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">No video or thumbnail</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Video Actions */}
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => window.open(`/api/videos/${activeVideo.videoId}`, '_blank')}
+                    className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center justify-center space-x-2"
+                    disabled={!activeVideo.videoId}
+                  >
+                    <Play size={16} />
+                    <span>View Full Video</span>
+                  </button>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}/api/videos/${activeVideo.videoId}`)}
+                    className="bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                    disabled={!activeVideo.videoId}
+                  >
+                    Copy URL
+                  </button>
+                </div>
+              </div>
+
+              {/* Video Information */}
+              <div className="space-y-4">
+                <div>
+                  <h5 className="text-xl font-bold text-gray-900 mb-2">{activeVideo.title}</h5>
+                  <p className="text-gray-600 leading-relaxed">{activeVideo.description}</p>
+                </div>
+
+                {/* Video Details Grid */}
+                <div className="bg-white rounded-lg p-4 space-y-3 border">
+                  <h6 className="font-semibold text-gray-900 border-b pb-2">Video Details</h6>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-500">Status:</span>
+                      <span className="ml-2 text-green-600 font-medium">Active</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Type:</span>
+                      <span className="ml-2">Homepage Video</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Video ID:</span>
+                      <span className="ml-2 font-mono text-xs text-gray-700">{activeVideo.videoId || 'None'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Thumbnail:</span>
+                      <span className="ml-2 font-mono text-xs text-gray-700">{activeVideo.thumbnailImageId || 'None'}</span>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="flex space-x-2 pt-2 border-t">
+                    <button
+                      onClick={() => toggleActive('home-video', activeVideo._id!, activeVideo.isActive)}
+                      className="flex-1 bg-red-100 text-red-700 py-2 px-3 rounded-lg hover:bg-red-200 transition-colors text-sm flex items-center justify-center space-x-2"
+                    >
+                      <EyeOff size={16} />
+                      <span>Deactivate</span>
+                    </button>
+                    <button
+                      onClick={() => window.open('/', '_blank')}
+                      className="flex-1 bg-green-100 text-green-700 py-2 px-3 rounded-lg hover:bg-green-200 transition-colors text-sm flex items-center justify-center space-x-2"
+                    >
+                      <Eye size={16} />
+                      <span>View Live</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gray-50 rounded-xl p-8 text-center border-2 border-dashed border-gray-300">
+            <Video className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h4 className="text-lg font-medium text-gray-900 mb-2">No Active Video</h4>
+            <p className="text-gray-600 mb-4">Upload a video to display on your homepage</p>
+            <button
+              onClick={() => openModal('video')}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Upload First Video
+            </button>
+          </div>
+        )}
+
+        {/* Other Videos Section */}
+        {inactiveVideos.length > 0 && (
+          <div className="space-y-4">
+            <h4 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+              <span>Other Videos</span>
+              <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">{inactiveVideos.length}</span>
+            </h4>
+            
+            <div className="grid gap-4">
+              {inactiveVideos.map((video) => (
+                <motion.div
+                  key={video._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-lg shadow-sm p-4 border hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0">
+                        {video.videoId ? (
+                          <div className="relative">                            <video
+                              id={`video-preview-${video._id}`}
+                              src={`/api/videos/${video.videoId}`}
+                              className="w-24 h-16 object-cover rounded"
+                              muted
+                              playsInline
+                              preload="metadata"
+                              poster={video.thumbnailImageId ? `/api/images/${video.thumbnailImageId}` : undefined}onLoadStart={() => {
+                                console.log('🎬 Inactive video loading:', video.videoId);
+                              }}
+                              onLoadedMetadata={() => {
+                                console.log('📹 Inactive video metadata ready:', video.videoId);
+                              }}onError={(e) => {
+                                const videoElement = e.currentTarget as HTMLVideoElement;
+                                const error = videoElement.error;
+                                
+                                // Only log if there's an actual error
+                                if (error) {
+                                  console.error('Inactive video preview error for:', video.videoId, {
+                                    errorCode: error.code,
+                                    errorMessage: error.message,
+                                    videoSrc: `/api/videos/${video.videoId}`,
+                                    networkState: videoElement.networkState,
+                                    readyState: videoElement.readyState
+                                  });
+                                }
+                              }}
+                            />
+                          </div>
+                        ) : video.thumbnailImageId ? (
+                          <img
+                            src={`/api/images/${video.thumbnailImageId}`}
+                            alt={video.title}
+                            className="w-24 h-16 object-cover rounded"
+                          />
+                        ) : (
+                          <div className="w-24 h-16 bg-gray-100 rounded flex items-center justify-center">
+                            <Video className="h-6 w-6 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h5 className="font-medium text-gray-900">{video.title}</h5>
+                        <p className="text-sm text-gray-600 mt-1 overflow-hidden" style={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical'
+                        }}>{video.description}</p>
+                        <div className="flex items-center space-x-4 mt-2">
+                          <span className="text-xs text-gray-500">Inactive</span>
+                          {video.videoId && (
+                            <span className="text-xs text-blue-600">Video uploaded</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      {video.videoId && (
+                        <button
+                          onClick={() => {
+                            const videoElement = document.querySelector(`#video-preview-${video._id}`) as HTMLVideoElement;
+                            if (videoElement) {
+                              if (videoElement.paused) {
+                                videoElement.play();
+                              } else {
+                                videoElement.pause();
+                              }
+                            }
+                          }}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                          title="Play/Pause video preview"
+                        >
+                          <Play size={16} />
+                        </button>
+                      )}
+                      
+                      <button
+                        onClick={() => toggleActive('home-video', video._id!, video.isActive)}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded"
+                        title="Make Active"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      
+                      <button
+                        onClick={() => openModal('video', video)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                        title="Edit Video"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      
+                      <button
+                        onClick={() => handleDelete('home-video', video._id!)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded"
+                        title="Delete Video"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderReviewsSection = () => (
     <div className="space-y-6">

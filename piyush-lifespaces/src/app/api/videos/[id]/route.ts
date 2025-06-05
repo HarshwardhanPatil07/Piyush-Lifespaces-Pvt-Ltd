@@ -2,14 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import VideoAsset from '@/models/VideoAsset';
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+      'Access-Control-Allow-Headers': 'Range, Content-Type',
+      'Access-Control-Max-Age': '86400',
+    }
+  });
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    const videoId = params?.id;
+    const { id: videoId } = await params;
     if (!videoId) {
       return NextResponse.json(
         { error: 'Video ID is required' },
@@ -38,9 +50,7 @@ export async function GET(
       const chunksize = (end - start) + 1;
 
       // Get chunk of video data
-      const chunk = video.data.subarray(start, end + 1);
-
-      return new NextResponse(chunk, {
+      const chunk = video.data.subarray(start, end + 1);      return new NextResponse(chunk, {
         status: 206, // Partial Content
         headers: {
           'Content-Type': video.mimeType,
@@ -48,17 +58,22 @@ export async function GET(
           'Content-Range': `bytes ${start}-${end}/${videoSize}`,
           'Accept-Ranges': 'bytes',
           'Cache-Control': 'public, max-age=31536000, immutable',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Allow-Headers': 'Range, Content-Type',
         }
       });
-    } else {
-      // Return full video
+    } else {      // Return full video
       return new NextResponse(video.data, {
         headers: {
           'Content-Type': video.mimeType,
           'Content-Length': video.size.toString(),
           'Accept-Ranges': 'bytes',
           'Cache-Control': 'public, max-age=31536000, immutable',
-          'Content-Disposition': `inline; filename="${video.originalName}"`
+          'Content-Disposition': `inline; filename="${video.originalName}"`,
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Allow-Headers': 'Range, Content-Type',
         }
       });
     }
@@ -74,12 +89,12 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    const videoId = params?.id;
+    const { id: videoId } = await params;
     if (!videoId) {
       return NextResponse.json(
         { error: 'Video ID is required' },
