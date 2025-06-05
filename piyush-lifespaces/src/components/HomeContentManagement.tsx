@@ -45,6 +45,7 @@ interface HomeVideo {
 interface FeaturedReview {
   _id?: string;
   customerName: string;
+  customerLocation?: string;
   customerImageId?: string;
   rating: number;
   reviewText: string;
@@ -166,17 +167,31 @@ export default function HomeContentManagement() {
     } finally {
       setSaving(false);
     }
-  };
-  const handleSaveFeaturedReview = async (reviewData: FeaturedReview) => {
+  };  const handleSaveFeaturedReview = async (reviewData: FeaturedReview) => {
     try {
       setSaving(true);
       const url = '/api/admin/featured-reviews';
       const method = reviewData._id ? 'PUT' : 'POST';
+        // Map form field names to API field names
+      const mappedData = {
+        _id: reviewData._id,
+        name: reviewData.customerName,
+        location: reviewData.customerLocation || 'Customer',
+        rating: reviewData.rating,
+        review: reviewData.reviewText,
+        imageId: reviewData.customerImageId,
+        property: reviewData.propertyName || 'General',
+        order: reviewData.order,
+        isActive: reviewData.isActive,
+        isCustom: reviewData.isCustom
+      };
+      
+      console.log('Mapped review data:', mappedData);
       
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reviewData)
+        body: JSON.stringify(mappedData)
       });
 
       if (response.ok) {
@@ -299,6 +314,7 @@ export default function HomeContentManagement() {
       });    } else if (type === 'review') {
       setEditingItem(item || {
         customerName: '',
+        customerLocation: '',
         customerImageId: '',
         rating: 5,
         reviewText: '',
@@ -776,6 +792,13 @@ export default function HomeContentManagement() {
                       src={`/api/images/${review.customerImageId}`}
                       alt={review.customerName}
                       className="w-12 h-12 object-cover rounded-full"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        // Prevent infinite re-render by only setting fallback once
+                        if (target.src !== "/images/default-avatar.svg") {
+                          target.src = "/images/default-avatar.svg";
+                        }
+                      }}
                     />
                   )}
                   <div>
@@ -1175,10 +1198,10 @@ function VideoForm({ video, onSave, onCancel, saving }: { video: HomeVideo, onSa
   );
 }
 
-function ReviewForm({ review, onSave, onCancel, saving }: { review: FeaturedReview, onSave: (review: FeaturedReview) => void, onCancel: () => void, saving: boolean }) {
-  const [formData, setFormData] = useState({
+function ReviewForm({ review, onSave, onCancel, saving }: { review: FeaturedReview, onSave: (review: FeaturedReview) => void, onCancel: () => void, saving: boolean }) {  const [formData, setFormData] = useState({
     ...review,
     customerName: review.customerName || '',
+    customerLocation: review.customerLocation || '',
     customerImageId: review.customerImageId || '',
     rating: review.rating || 5,
     reviewText: review.reviewText || '',
@@ -1200,16 +1223,27 @@ function ReviewForm({ review, onSave, onCancel, saving }: { review: FeaturedRevi
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
-        <input
+        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>        <input
           type="text"
           value={formData.customerName}
           onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Location</label>
+        <input
+          type="text"
+          value={formData.customerLocation}
+          onChange={(e) => setFormData({ ...formData, customerLocation: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="e.g., Mumbai, Delhi, Bangalore"
+          required
+        />
       </div>      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Image (Optional)</label>        <ImageUploadComponent
+        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Image (Optional)</label><ImageUploadComponent
           onImagesUploaded={(imageIds) => {
             console.log('Images uploaded for review:', imageIds);
             if (imageIds.length > 0) {

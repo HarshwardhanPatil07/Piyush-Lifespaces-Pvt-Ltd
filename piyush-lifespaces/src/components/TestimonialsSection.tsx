@@ -22,54 +22,40 @@ export default function TestimonialsSection() {
   const [isAnimating, setIsAnimating] = useState(false)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Fallback testimonials if API fails
-  const fallbackTestimonials: Testimonial[] = [
-    {
-      _id: 'fallback-1',
-      name: "Rajesh Kumar",
-      location: "Pune",
-      rating: 5,
-      review: "Piyush Lifespaces delivered exactly what they promised. The quality of construction and attention to detail in our apartment is exceptional. The team was professional throughout the entire process.",
-      image: "/api/placeholder/80/80",
-      property: "Piyush Heights",
-      order: 1
-    },
-    {
-      _id: 'fallback-2',
-      name: "Priya Sharma",
-      location: "Mumbai",
-      rating: 5,
-      review: "We're absolutely thrilled with our new home! The location is perfect, and the amenities are top-notch. Piyush Lifespaces has truly created a community where we love to live.",
-      image: "/api/placeholder/80/80",
-      property: "Piyush Residency",
-      order: 2
-    },
-    {
-      _id: 'fallback-3',
-      name: "Amit Patel",
-      location: "Bangalore",
-      rating: 5,
-      review: "From the initial consultation to the final handover, everything was smooth and transparent. The investment has already shown great returns. Highly recommend Piyush Lifespaces!",
-      image: "/api/placeholder/80/80",
-      property: "Piyush Commercial Plaza",
-      order: 3
-    }
-  ]  // Fetch featured reviews from API
+  // Fetch featured reviews from API
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await fetch('/api/home/featured-reviews')
-        const data = await response.json()
+        console.log('Fetching testimonials from API...')
+        const response = await fetch('/api/home/featured-reviews', {
+          cache: 'no-store', // Disable caching
+          headers: {
+            'Cache-Control': 'no-cache',
+          }
+        })
         
-        if (data.success && data.data && data.data.length > 0) {
-          setTestimonials(data.data)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        console.log('API Response:', data)
+        
+        if (data.success && data.data && Array.isArray(data.data)) {
+          console.log('Successfully loaded testimonials from admin:', data.data.length)
+          setTestimonials(data.data.sort((a: Testimonial, b: Testimonial) => a.order - b.order))
+          setError(null)
         } else {
-          setTestimonials(fallbackTestimonials)
+          console.log('No testimonials found in admin system')
+          setTestimonials([])
+          setError('No testimonials available. Please add some through the admin panel.')
         }
       } catch (error) {
         console.error('Error fetching testimonials:', error)
-        setTestimonials(fallbackTestimonials)
+        setTestimonials([])
+        setError('Failed to load testimonials. Please check your connection or contact the administrator.')
       } finally {
         setLoading(false)
       }
@@ -112,7 +98,6 @@ export default function TestimonialsSection() {
       />
     ))
   }
-
   if (loading) {
     return (
       <section className="py-20 bg-gray-50">
@@ -126,8 +111,27 @@ export default function TestimonialsSection() {
     )
   }
 
-  if (testimonials.length === 0) {
-    return null
+  if (error || testimonials.length === 0) {
+    return (
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              What Our Clients Say
+            </h2>
+            <div className="bg-white rounded-xl shadow-lg p-12 max-w-2xl mx-auto">
+              <Quote className="h-12 w-12 text-gray-300 mx-auto mb-6" />
+              <p className="text-gray-500 text-lg mb-6">
+                {error || 'No testimonials are currently available.'}
+              </p>
+              <p className="text-gray-400 text-sm">
+                Testimonials can be managed through the admin panel.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -149,44 +153,52 @@ export default function TestimonialsSection() {
               for their dream properties. Their stories inspire our commitment to excellence.
             </p>
           </motion.div>
-        </div>
-
-        {/* Testimonials Carousel */}
+        </div>        {/* Testimonials Carousel */}
         <div className="relative">
           {/* Navigation Buttons */}
-          <div className="flex justify-center items-center mb-8">
-            <button
-              onClick={handlePrevious}
-              disabled={isAnimating}
-              className="mr-4 p-3 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="h-6 w-6 text-blue-600" />
-            </button>
-            
-            <div className="text-sm text-gray-500 px-4">
-              {currentIndex + 1} - {Math.min(currentIndex + itemsPerView, testimonials.length)} of {testimonials.length}
+          {testimonials.length > itemsPerView && (
+            <div className="flex justify-center items-center mb-8">
+              <button
+                onClick={handlePrevious}
+                disabled={isAnimating}
+                className="mr-4 p-3 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-6 w-6 text-blue-600" />
+              </button>
+              
+              <div className="text-sm text-gray-500 px-4">
+                {currentIndex + 1} - {Math.min(currentIndex + itemsPerView, testimonials.length)} of {testimonials.length}
+              </div>
+              
+              <button
+                onClick={handleNext}
+                disabled={isAnimating}
+                className="ml-4 p-3 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="h-6 w-6 text-blue-600" />
+              </button>
             </div>
-            
-            <button
-              onClick={handleNext}
-              disabled={isAnimating}
-              className="ml-4 p-3 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="h-6 w-6 text-blue-600" />
-            </button>
-          </div>
+          )}
 
           {/* Testimonials Grid */}
           <div className="overflow-hidden">
             <motion.div
-              className="flex transition-transform duration-300 ease-in-out"
+              className={`flex transition-transform duration-300 ease-in-out ${
+                testimonials.length <= itemsPerView ? 'justify-center' : ''
+              }`}
               style={{
-                transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`
+                transform: testimonials.length > itemsPerView 
+                  ? `translateX(-${currentIndex * (100 / itemsPerView)}%)`
+                  : 'none'
               }}
             >              {testimonials.map((testimonial) => (
                 <div
                   key={testimonial._id}
-                  className="w-full md:w-1/3 flex-shrink-0 px-3"
+                  className={`w-full ${
+                    testimonials.length <= itemsPerView 
+                      ? 'md:w-1/3 max-w-md mx-2' 
+                      : 'md:w-1/3'
+                  } flex-shrink-0 px-3`}
                 >
                   <motion.div
                     initial={{ opacity: 0, y: 30 }}
@@ -208,14 +220,19 @@ export default function TestimonialsSection() {
                     {/* Rating */}
                     <div className="flex items-center mb-6">
                       {renderStars(testimonial.rating)}
-                    </div>
-
-                    {/* Customer Info */}
+                    </div>                    {/* Customer Info */}
                     <div className="flex items-center">
                       <img
-                        src={testimonial.image}
+                        src={testimonial.image || "/images/default-avatar.svg"}
                         alt={testimonial.name}
                         className="w-12 h-12 rounded-full object-cover mr-4"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          // Prevent infinite re-render by only setting fallback once
+                          if (target.src !== "/images/default-avatar.svg") {
+                            target.src = "/images/default-avatar.svg";
+                          }
+                        }}
                       />
                       <div>
                         <h4 className="font-semibold text-gray-900">
@@ -224,31 +241,32 @@ export default function TestimonialsSection() {
                         <p className="text-gray-600 text-sm">
                           {testimonial.location} • {testimonial.property}
                         </p>
-                      </div>                    </div>
+                      </div>
+                    </div>
                   </motion.div>
                 </div>
               ))}
             </motion.div>
-          </div>
-
-          {/* Dots Indicator */}
-          <div className="flex justify-center mt-8 space-x-2">
-            {Array.from({ length: maxIndex + 1 }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  if (!isAnimating) {
-                    setIsAnimating(true)
-                    setCurrentIndex(i)
-                    setTimeout(() => setIsAnimating(false), 300)
-                  }
-                }}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  i === currentIndex ? 'bg-blue-600' : 'bg-gray-300'
-                }`}
-              />
-            ))}
-          </div>
+          </div>          {/* Dots Indicator */}
+          {testimonials.length > itemsPerView && (
+            <div className="flex justify-center mt-8 space-x-2">
+              {Array.from({ length: maxIndex + 1 }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    if (!isAnimating) {
+                      setIsAnimating(true)
+                      setCurrentIndex(i)
+                      setTimeout(() => setIsAnimating(false), 300)
+                    }
+                  }}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    i === currentIndex ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* CTA Section */}

@@ -7,7 +7,7 @@ export interface IFeaturedReview {
   location: string
   rating: number
   review: string
-  image: string
+  imageId?: string
   property: string
   order: number
   isActive: boolean
@@ -45,10 +45,9 @@ const FeaturedReviewSchema = new mongoose.Schema({
     required: [true, 'Review text is required'],
     trim: true,
     maxLength: [500, 'Review cannot exceed 500 characters']
-  },
-  image: {
+  },  imageId: {
     type: String,
-    required: [true, 'Image URL is required']
+    required: false // Optional for customer image
   },
   property: {
     type: String,

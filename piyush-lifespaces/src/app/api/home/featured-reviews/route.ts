@@ -11,9 +11,16 @@ export async function GET() {
       .select('-__v')
       .lean()
     
+    // Transform the data to match expected format for testimonials
+    const transformedReviews = reviews.map(review => ({
+      ...review,
+      // Map imageId to image URL for compatibility with TestimonialsSection
+      image: review.imageId ? `/api/images/${review.imageId}` : null
+    }))
+    
     return NextResponse.json({
       success: true,
-      data: reviews
+      data: transformedReviews
     })
   } catch (error) {
     console.error('Error fetching featured reviews:', error)
